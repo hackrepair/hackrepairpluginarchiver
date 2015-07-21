@@ -26,6 +26,7 @@ For more details see the screenshots tab
 <http://wordpress.org/extend/plugins/hackrepair-plugin-archiver/screenshots/>
 
 Donations?
+
 If you find The Hack Repair Guys Archiver plugin useful, please consider donating $1 or more to our mutual cause. Every dollar counts and will help our beleaguered plugin developer cover the cost of baby food for his children.
 
 == Installation ==
