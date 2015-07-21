@@ -1,10 +1,15 @@
 === The Hack Repair Guys Plugin Archiver ===
 
 Contributors: hackrepair, Arūnas
+
 Tags: plugin archive, plugins, spam
+
 Requires at least: 4.2.2
+
 Tested up to: 4.2.2
+
 Stable tag: 4.2.2
+
 License: GPLv2 or later
 
 
