@@ -7,7 +7,6 @@ Tested up to: 4.2.2
 Stable tag: 4.2.2
 License: GPLv2 or later
 
-
 Quickly deactivate and archive a plugin for later review. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
 
 == Description ==
@@ -26,8 +25,11 @@ For more details see the screenshots tab
 <http://wordpress.org/extend/plugins/hackrepair-plugin-archiver/screenshots/>
 
 Donations?
-
 If you find The Hack Repair Guys Archiver plugin useful, please consider donating $1 or more to our mutual cause. Every dollar counts and will help our beleaguered plugin developer cover the cost of baby food for his children.
+
+Related Links?
+* Documentation
+* Support Forum
 
 == Installation ==
 
