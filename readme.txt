@@ -1,4 +1,4 @@
-=== The Hack Repair Guys Plugin Archiver ===
+=== The Hack Repair Guys Archiver plugin ===
 
 Contributors: hackrepair, Arūnas
 Tags: plugin archive, plugins, spam
@@ -11,12 +11,12 @@ Quickly deactivate and archive a plugin for later review. Archiving a plugin bot
 
 == Description ==
 
-Ever wished you could move plugins out of your WordPress Plugins list, but still have them readily available for installation later. The Hack Repair Guys Plugin Archiver is the answer.
+Ever wished you could move plugins out of your WordPress Plugins list, but still have them readily available for installation later. The Hack Repair Guys Archiver plugin is the answer.
 
 Why use The Hack Repair Guys Archiver plugin?
 
 * Maybe you have a set of plugins that you would like to install in all of your WordPress sites, but would rather not have them listed within Plugins (until you need them).
-* Maybe you've run into a buggy plugin, that when activated breaks your home page. The Hack Repair Guys Plugin Archiver plugin will allow you to simply archive the plugin, preventing accidental activation.
+* Maybe you've run into a buggy plugin, that when activated breaks your home page. The Hack Repair Guys Archiver plugin plugin will allow you to simply archive the plugin, preventing accidental activation.
 * Maybe you share management with another administrator who believes the "Activate" link is an invitation to "click it!"
 
 With  The Hack Repair Guys Archiver plugin, you may upload or move plugins to your own custom archive directory. It's just that easy!
@@ -47,4 +47,4 @@ If you would prefer to manually install The Hack Repair Guys Archiver plugin fol
 == Changelog ==
 
 = 1.0 =
-* The Hack Repair Guys Plugin Archiver is born!
+* The Hack Repair Guys Archiver plugin is born!
