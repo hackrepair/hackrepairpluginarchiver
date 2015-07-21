@@ -7,6 +7,7 @@ Tested up to: 4.2.2
 Stable tag: 4.2.2
 License: GPLv2 or later
 
+
 Quickly deactivate and archive a plugin for later review. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
 
 == Description ==
