@@ -24,11 +24,13 @@ With  The Hack Repair Guys Plugin Archiver, you may upload or move plugins to yo
 For more details see the screenshots tab http://wordpress.org/extend/plugins/hackrepair-plugin-archiver/screenshots/
 
 Donations?
-If you find The Hack Repair Guys Plugin Archiver useful, please consider donating $1 or more to our mutual cause. Every dollar counts and will help our beleaguered plugin developer cover the cost of baby food for his children.
+If you find The Hack Repair Guys Plugin Archiver useful, please consider donating $1 or more to our mutual cause.
+
+Every dollar counts and will help our beleaguered plugin developers concentrate on improvements and less about next month's rent. Donate for the cause at https://hackrepair.com/about/hackrepair-plugin-archiver
 
 Related Links?
-* Documentation https://hackrepair.com/about/hackrepair-plugin-archiver
-* Support Forum https://wordpress.org/support/hackrepair-plugin-archiver
+* See documentation at https://hackrepair.com/about/hackrepair-plugin-archiver
+* See support forum at https://wordpress.org/support/hackrepair-plugin-archiver
 
 == Installation ==
 
