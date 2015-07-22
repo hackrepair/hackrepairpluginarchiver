@@ -35,7 +35,7 @@ Related Links?
 The quickest method for installing WordPress Plugin Archiver is:
 
 * Go to your admin area and select Plugins -> Add new from the menu.
-* Search for "The Hack Repair Guys Archiver".
+* Search for "The Hack Repair Guys Plugin Archiver".
 * Click install.
 * Click activate.
 
