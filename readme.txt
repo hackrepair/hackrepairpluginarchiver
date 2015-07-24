@@ -1,11 +1,12 @@
 === The Hack Repair Guys Plugin Archiver ===
-
 Contributors: hackrepair, Arūnas
 Tags: plugin archive, wordpress plugins, backups
+Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
 Tested up to: 4.2.2
-Stable tag: 4.2.2
-License: GPLv2 or later
+Stable tag: 1.0
+License: GPLv2
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 Quickly deactivate and archive a plugin for later review. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
 
