@@ -4,21 +4,22 @@
 class HackRepair_Plugin_Archiver_Options {
   private static $defaults = array();
   private static $fields = array();
-  public static $values = array();
   private static $id = '';
   private static $menu_title = '';
   private static $title = '';
   private static $description = '';
   private static $file = '';
   private static $role = 'manage_options';
+  private static $parent_class = '';
 
-  public static function init($str='tiny',$menu_title,$title,$fields,$file=false,$role=false) {
-    self::$fields     = $fields;
-    self::$file       = $file ? $file : __FILE__;
-    self::$id         = $str.'_options';
-    self::$menu_title = $menu_title;
-    self::$title      = $title;
-    self::$role       = $role ? $role : self::$role;
+  public static function init($str='tiny',$menu_title,$title,$fields,$parent_class,$file=false,$role=false) {
+    self::$fields       = $fields;
+    self::$file         = $file ? $file : __FILE__;
+    self::$id           = $str.'_options';
+    self::$menu_title   = $menu_title;
+    self::$title        = $title;
+    self::$parent_class = $parent_class;
+    self::$role         = $role ? $role : self::$role;
     self::build_settings();
     add_options_page(self::$title, self::$menu_title, self::$role, self::$file, array('HackRepair_Plugin_Archiver_Options','page'));
   }
@@ -49,6 +50,7 @@ class HackRepair_Plugin_Archiver_Options {
   // DROP-DOWN-BOX - Name: select - Argument : values: array()
   public static function select($args) {
     $items = $args['values'];
+    $description = isset( $args['description'] ) ? "<p class=\"description\">{$args['description']}</p>": '';
     echo "<select id='".self::$id."_{$args['option_id']}' name='".self::$id."[{$args['option_id']}]'>";
     if (self::is_assoc($items)) {
       foreach($items as $key=>$item) {
@@ -63,7 +65,7 @@ class HackRepair_Plugin_Archiver_Options {
         echo "<option value='{$key}' $selected>$item</option>";
       }
     }
-    echo "</select>";
+    echo "</select>{$description}";
   }
 
   // CHECKBOX - Name: checkbox
@@ -72,7 +74,8 @@ class HackRepair_Plugin_Archiver_Options {
       HackRepair_Plugin_Archiver::$options[$args['option_id']] = false;
     }
     $checked = checked( HackRepair_Plugin_Archiver::$options[$args['option_id']], true, false );
-    echo "<input ".$checked." id='{$args['option_id']}' name='".self::$id."[{$args['option_id']}]' type='checkbox' value=\"1\"/>";
+    $description = isset( $args['description'] ) ? "<p class=\"description\">{$args['description']}</p>": '';
+    echo "<input ".$checked." id='{$args['option_id']}' name='".self::$id."[{$args['option_id']}]' type='checkbox' value=\"1\"/>{$description}";
   }
 
   // TEXTAREA - Name: textarea - Arguments: rows:int=4 cols:int=20
@@ -87,6 +90,13 @@ class HackRepair_Plugin_Archiver_Options {
     if ( !isset($args['size']) ) $args['size']=40;
     $description = isset( $args['description'] ) ? "<p class=\"description\">{$args['description']}</p>": '';
     echo "<input id='{$args['option_id']}' name='".self::$id."[{$args['option_id']}]' size='{$args['size']}' type='text' value='".esc_attr( HackRepair_Plugin_Archiver::$options[$args['option_id']] )."' />{$description}";
+  }
+
+  // TEXTBOX CUSTOM - Name: text_plugins - Arguments: size:int=40
+  public static function text_plugins($args) {
+    if ( !isset($args['size']) ) $args['size']=40;
+    $description = isset( $args['description'] ) ? "<p class=\"description\">{$args['description']}</p>": '';
+    echo "<code>WP_CONTENT_DIR/plugins-</code> <input id='{$args['option_id']}' name='".self::$id."[{$args['option_id']}]' size='{$args['size']}' type='text' value='".esc_attr( HackRepair_Plugin_Archiver::$options[$args['option_id']] )."' />{$description}";
   }
 
   // NUMBER TEXTBOX - Name: text - Arguments: size:int=40
@@ -171,14 +181,7 @@ class HackRepair_Plugin_Archiver_Options {
 
   // Validate user data for some/all of your input fields
   public static function validate($input) {
-    if ( !is_array($input['role']) ) {
-      $input['role'] = array();
-    }
-    if ( !isset($input['ping']) || !$input['ping'] ) {
-      $input['ping'] = 0;
-    }
-//      var_dump($input);
-//    die();
+    $input = apply_filters( 'hackrepair-plugin-archiver_validate_settings', $input );
     return $input; // return validated input
   }
 
