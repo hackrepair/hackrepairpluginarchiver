@@ -4,6 +4,7 @@
 class HackRepair_Plugin_Archiver_Options {
   private static $defaults = array();
   private static $fields = array();
+  private static $tabs = array();
   private static $id = '';
   private static $menu_title = '';
   private static $title = '';
@@ -12,8 +13,9 @@ class HackRepair_Plugin_Archiver_Options {
   private static $role = 'manage_options';
   private static $parent_class = '';
 
-  public static function init($str='tiny',$menu_title,$title,$fields,$parent_class,$file=false,$role=false) {
+  public static function init($str='tiny',$menu_title,$title,$fields,$tabs,$parent_class,$file=false,$role=false) {
     self::$fields       = $fields;
+    self::$tabs         = $tabs;
     self::$file         = $file ? $file : __FILE__;
     self::$id           = $str.'_options';
     self::$menu_title   = $menu_title;
@@ -158,6 +160,42 @@ class HackRepair_Plugin_Archiver_Options {
     }
   }
 
+  public static function tabs($current = 'settings' ) {
+    $result = '';
+    if ( sizeof( self::$tabs ) ) {
+      $result  = "      <h2 class=\"nav-tab-wrapper\">\r\n";
+      foreach ( self::$tabs as $tab_key => $tab ) {
+        if ( $tab_key === $current ) {
+          $tab['class'] .= ' nav-tab-active';
+        }
+        $result .= "        <a class=\"nav-tab{$tab['class']}\" href=\"{$tab['href']}\">{$tab['title']}</a>\r\n";
+      }
+      $result .= "      </h2>\r\n";
+    }
+    return $result;
+  }
+  public static function settings() {
+    ?>
+      <form action="options.php" method="post">
+      <?php settings_fields(self::$id); ?>
+      <?php do_settings_sections(self::$file); ?>
+      <p class="submit">
+        <input name="submit" type="submit" class="button-primary" value="<?php esc_attr_e('Save Changes'); ?>" />
+      </p>
+      </form>
+    <?php
+  }
+  public static function content( $current ) {
+    $callback = array( 'HackRepair_Plugin_Archiver_Options', 'settings');
+    if ( isset( self::$tabs[$current]['callback'] ) ) {
+      if ( is_callable( self::$tabs[$current]['callback'] ) ) {
+        $callback = self::$tabs[$current]['callback'];
+      } else {
+        $callback = array( 'HackRepair_Plugin_Archiver_Options', self::$tabs[$current]['callback'] );
+      }
+    }
+    return $callback;
+  }
   // Display the admin options page
   public static function page() {
     if (!current_user_can('manage_options')) {
@@ -167,21 +205,24 @@ class HackRepair_Plugin_Archiver_Options {
     <div class="wrap">
       <div class="icon32" id="icon-page"><br></div>
       <h2><?php echo self::$title; ?></h2>
-      <?php echo self::$description; ?>
-      <form action="options.php" method="post">
-      <?php settings_fields(self::$id); ?>
-      <?php do_settings_sections(self::$file); ?>
-      <p class="submit">
-        <input name="submit" type="submit" class="button-primary" value="<?php esc_attr_e('Save Changes'); ?>" />
-      </p>
-      </form>
+      <?php 
+        echo self::$description;
+        $default = array_keys( self::$tabs );
+        $default = array_shift( $default );
+        $current = isset( $_REQUEST['tab'] ) ? $_REQUEST['tab'] : $default;
+        echo self::tabs( $current );
+        call_user_func( self::content( $current ) );
+      ?>
     </div>
   <?php
   }
 
   // Validate user data for some/all of your input fields
   public static function validate($input) {
-    $input = apply_filters( 'hackrepair-plugin-archiver_validate_settings', $input );
+    if ( !isset($input['archive_dir_add']) || $input['archive_dir_add'] ) {
+      wp_mkdir_p( WP_CONTENT_DIR.'/plugins-'.$input['archive_dir_add'] );
+      $input['archive_dir_add'] = '';
+    }
     return $input; // return validated input
   }
 

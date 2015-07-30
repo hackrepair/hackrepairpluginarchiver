@@ -10,6 +10,7 @@ Author URI: http://hackrepair.com/hackrepair-plugin-archiver/
 
 
 add_action('plugins_loaded', array( 'HackRepair_Plugin_Archiver', 'init' ) );
+
 class HackRepair_Plugin_Archiver {
 	public static $count = 0;
 	public static $options = array(
@@ -37,14 +38,6 @@ class HackRepair_Plugin_Archiver {
 		add_action( 'load-plugins_page_hackrepair-plugin-archiver', 	array( 'HackRepair_Plugin_Archiver', 'archive_actions' ) );
 		add_action( 'admin_notices',          		array( 'HackRepair_Plugin_Archiver', 'admin_notice' ) );
 		add_filter( 'views_plugins', 				array( 'HackRepair_Plugin_Archiver', 'plugin_views' ) );
-		add_filter( 'hackrepair-plugin-archiver_validate_settings', array( 'HackRepair_Plugin_Archiver', 'validate_settings' ) );
-	}
-	private static function validate_settings( $input ) {
-	    if ( !isset($input['archive_dir_add']) || $input['archive_dir_add'] ) {
-	      wp_mkdir_p( WP_CONTENT_DIR.'/plugins-'.$input['archive_dir_add'] );
-	      $input['archive_dir_add'] = '';
-	    }
-	    return $input;
 	}
 	private static function get_archive_dirs() {
 	    global $wp_filesystem;
@@ -67,7 +60,7 @@ class HackRepair_Plugin_Archiver {
 				'callback' => '',
 				'options' => array(
 					'archive_dir' => array(
-						'title'=>__('Current Archive directory','hackrepair-plugin-archiver'),
+						'title'=>__('Current Archive Directory','hackrepair-plugin-archiver'),
 						'args' => array (
 							'values' => $archive_dirs,
 							'description' => __( 'Name of the directory to store archived plugins in. Relative to <code>WP_CONTENT_DIR</code>.', 'hackrepair-plugin-archiver' ),
@@ -75,14 +68,14 @@ class HackRepair_Plugin_Archiver {
 						'callback' => 'select',
 					),
 					'archive_dir_add' => array(
-						'title'=>__('New Archive directory','hackrepair-plugin-archiver'),
+						'title'=>__('New Archive Directory','hackrepair-plugin-archiver'),
 						'args' => array (
-							'description' => __( 'Create a new Plugin Archive direcotry. Will be prefixed with <code>plugins-</code>.', 'hackrepair-plugin-archiver' ),
+							'description' => __( 'Create a new Plugin Archive directory. Will be prefixed with <code>plugins-</code>.', 'hackrepair-plugin-archiver' ),
 						),
 						'callback' => 'text_plugins',
 					),
 					'deactivate' => array(
-						'title'=>__('Deactivate before archiving','hackrepair-plugin-archiver'),
+						'title'=>__('Deactivate Before Archiving','hackrepair-plugin-archiver'),
 						'args' => array (
 							'description' => __( 'Should the plugin be automatically deactivated before moving it to the archive?', 'hackrepair-plugin-archiver' ),
 						),
@@ -91,14 +84,37 @@ class HackRepair_Plugin_Archiver {
 				),
 			),
 		);
+		$tabs = array(
+			'settings' => array(
+				'title' => __( 'Settings', 'hackrepair-plugin-archiver' ),
+				'href'  => admin_url('options-general.php?page=hackrepair-plugin-archiver-settings'),
+				'class' => '',
+				'callback' => 'settings',
+			),
+			'archive' => array(
+				'title' => __( 'Archived Plugins', 'hackrepair-plugin-archiver' ),
+				'href'  => admin_url('plugins.php?page=hackrepair-plugin-archiver'),
+				'class' => '',
+			),
+			'notes' => array(
+				'title' => __( 'Author Notes', 'hackrepair-plugin-archiver' ),
+				'href'  => admin_url('options-general.php?page=hackrepair-plugin-archiver-settings&tab=notes'),
+				'class' => '',
+				'callback' => array( 'HackRepair_Plugin_Archiver', 'notes' ),
+			),
+		);
 		HackRepair_Plugin_Archiver_Options::init(
 		'hackrepair-plugin-archiver',
 		__( 'Plugin Archiver',          'hackrepair-plugin-archiver' ),
 		__( 'Plugin Archiver Settings', 'hackrepair-plugin-archiver' ),
 		$fields,
+		$tabs,
 		'HackRepair_Plugin_Archiver',
-		'hackrepair-plugin-archiver'
+		'hackrepair-plugin-archiver-settings'
 		);
+	}
+	public static function notes() {
+		echo '<p>Content coming soon.<p>';
 	}
 
 	public static function plugin_views( $views ){
