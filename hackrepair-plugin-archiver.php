@@ -23,15 +23,15 @@ class HackRepair_Plugin_Archiver {
 		self::$options = wp_parse_args( $options, self::$options );
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( 'HackRepair_Plugin_Archiver', 'admin_init'  ) );
+			$bulk_action = new HackRepair_Plugin_Archiver_Bulk_Action();
+			$bulk_action->init();
+			$bulk_action->register_bulk_action( array(
+				'action_name'  => 'archive-selected',
+				'menu_text'    => __( 'Archive', 'hackrepair-plugin-archiver' ),
+				'admin_notice' => _n_noop( 'Plugin archived sucessfully', '%d plugins archived sucessfully', 'hackrepair-plugin-archiver' ),
+				'callback'     => array( 'HackRepair_Plugin_Archiver', 'bulk_archive' ),
+			) );
 		}
-		$bulk_action = new HackRepair_Plugin_Archiver_Bulk_Action();
-		$bulk_action->init();
-		$bulk_action->register_bulk_action( array(
-			'action_name'  => 'archive-selected',
-			'menu_text'    => __( 'Archive', 'hackrepair-plugin-archiver' ),
-			'admin_notice' => _n_noop( 'Plugin archived sucessfully', '%d plugins archived sucessfully', 'hackrepair-plugin-archiver' ),
-			'callback'     => array( 'HackRepair_Plugin_Archiver', 'bulk_archive' ),
-		) );
 		add_filter( 'plugin_action_links', 			array( 'HackRepair_Plugin_Archiver', 'action_link' ), 10, 4 );
 		add_action( 'admin_menu',          			array( 'HackRepair_Plugin_Archiver', 'menu' ) );
 		add_filter( 'custom_menu_order',   			array( 'HackRepair_Plugin_Archiver', 'menu_order' ) );
