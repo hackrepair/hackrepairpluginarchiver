@@ -132,7 +132,7 @@ class HackRepair_Plugin_Archiver {
 		HackRepair_Plugin_Archiver_Options::init(
 		'hackrepair-plugin-archiver',
 		__( 'Plugin Archiver',          'hackrepair-plugin-archiver' ),
-		__( 'Plugin Archiver Settings', 'hackrepair-plugin-archiver' ),
+		__( 'The Hack Repair Guys Plugin Archiver: Settings', 'hackrepair-plugin-archiver' ),
 		$fields,
 		$tabs,
 		'HackRepair_Plugin_Archiver',
