@@ -268,7 +268,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		global $status;
 		echo '<div class="alignleft actions" style="margin-top:1px;">
 		    <a class="button action" href="'.admin_url( 'plugins.php?page=hackrepair-plugin-archiver&amp;action=restore-selected&amp;all=true').'">'.__( 'Unarchive All', 'hackrepair-plugin-archiver' ).'</a>
-		    <a class="button action" href="'.admin_url( 'options-general.php?page=hackrepair-plugin-archiver-settings').'">'.__( 'Settings', 'hackrepair-plugin-archiver' ).'</a>
+		    <a class="button action" href="'.admin_url( 'options-general.php?page=hackrepair-plugin-archiver-settings').'">'.__( 'Plugin Archiver Settings', 'hackrepair-plugin-archiver' ).'</a>
 		  </div>';
 	}
 
