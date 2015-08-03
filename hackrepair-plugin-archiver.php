@@ -274,7 +274,7 @@ class HackRepair_Plugin_Archiver {
 	}
 	public static function menu() {
 		$a = add_plugins_page( 
-			__( 'Plugin Archive', 'hackrepair-plugin-archiver' ), 
+			__( 'The Hack Repair Guys Plugin Archiver: Archived Plugins', 'hackrepair-plugin-archiver' ), 
 			__( 'Archived Plugins',        'hackrepair-plugin-archiver' ),
 			'install_plugins', 
 			'hackrepair-plugin-archiver', 
