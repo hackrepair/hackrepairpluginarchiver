@@ -9,11 +9,11 @@ Stable tag: 1.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-== Description ==
-
 Quickly deactivate and archive a plugin for later review. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
 
-Ever wished you could move plugins out of your WordPress Plugins list, but still have them readily available for installation later. The Hack Repair Guys Plugin Archiver is the answer.
+== Description ==
+
+The Hack Repair Guys Plugin Archiver allows you to move plugins out of the WordPress Plugins list, but still have them readily available for installation later.
 
 
 == Why did you birth this plugin? ==
