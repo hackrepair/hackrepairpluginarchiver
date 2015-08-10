@@ -71,8 +71,4 @@ If you would prefer to manually install The Hack Repair Guys Plugin Archiver fol
 
 = 1.0.0 =
 
-* Released on WordPress.org
-
-= 0.1.0 =
-
 * The Hack Repair Guys Plugin Archiver is born!
