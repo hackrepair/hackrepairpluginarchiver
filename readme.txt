@@ -5,7 +5,7 @@ Tags: plugin archive, wordpress plugins, plugin backup, plugin restore
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
 Tested up to: 4.2.2
-Stable tag: 1.0
+Stable tag: 1.0.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,5 +69,5 @@ If you would prefer to manually install The Hack Repair Guys Plugin Archiver fol
 
 == Changelog ==
 
-= 0.1.0 =
+= 1.0.0=
 * The Hack Repair Guys Plugin Archiver is born!
