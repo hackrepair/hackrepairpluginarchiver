@@ -4,5 +4,5 @@
 
 #Get Started or Need Help
 
-> See [https://hackrepair.com/about/hackrepair-plugin-archiver]
+> See [The Hack Repair Guys Plugin Archiver Introduction](https://hackrepair.com/about/hackrepair-plugin-archiver)
 
