@@ -1,6 +1,6 @@
 === The Hack Repair Guys Plugin Archiver ===
 
-Contributors: hackrepair, Arūnas
+Contributors: hackrepair, Jim Walker, Mike Dudas, Arūnas
 Tags: plugin archive, wordpress plugins, plugin backup
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
