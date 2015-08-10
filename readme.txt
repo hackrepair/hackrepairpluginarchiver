@@ -13,7 +13,7 @@ Quickly deactivate and archive a plugin for later review. Archiving a plugin bot
 
 == Description ==
 
-The Hack Repair Guys Plugin Archiver allows you to move plugins out of the WordPress Plugins list, but still have them readily available for installation later.
+The Hack Repair Guys Plugin Archiver allows you to move plugins out of the WordPress Plugins list but still have them readily available for installation or reactivation later.
 
 
 == Why did you birth this plugin? ==
