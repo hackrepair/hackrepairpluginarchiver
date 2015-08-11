@@ -5,14 +5,15 @@ Tags: plugin archive, wordpress plugins, plugin backup, plugin restore
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
 Tested up to: 4.2.2
-Stable tag: 0.1.11
+Stable tag: 0.1.12
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
 
 = The Hack Repair Guy's Plugin Archiver allows you to move plugins out of the WordPress Plugins list but still have them readily available for installation or reactivation later. =
-** ** 
+
++++
 
 **Why use The Hack Repair Guy's Plugin Archiver?**
 
