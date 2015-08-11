@@ -5,7 +5,7 @@ Tags: plugin archive, wordpress plugins, plugin backup, plugin restore
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
 Tested up to: 4.2.2
-Stable tag: 0.1.12
+Stable tag: 0.1.13
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -45,7 +45,7 @@ Every dollar counts and will help our beleaguered plugin developers concentrate 
 
 == Installation ==
 
-= The quickest method for installing WordPress Plugin Archiver is: =
+= The quickest method for installing The Hack Repair Guy's Plugin Archiver is: =
 
 * Go to your admin area and select Plugins -> Add new from the menu.
 * Search for "The Hack Repair Guy's Plugin Archiver".
