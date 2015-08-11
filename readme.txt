@@ -62,3 +62,10 @@ If you would prefer to manually install The Hack Repair Guys Plugin Archiver fol
 
 * Upload the hackrepair-plugin-archiver folder to the /wp-content/plugins/ directory
 * Activate the plugin through the Plugins menu in WordPress
+
+
+== Changelog ==
+
+1.0.0
+* The Hack Repair Guys Plugin Archiver is born!
+
