@@ -24,6 +24,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 **With The Hack Repair Guy's Plugin Archiver, you may even upload or move plugins to your own custom archive directory.**
 
+
 “The secret to getting ahead is getting started.”  ― Mark Twain
 
 
@@ -63,6 +64,7 @@ Every dollar counts and will help our beleaguered plugin developers concentrate 
 
 * https://hackrepair.com/about/hackrepair-plugin-archiver
 
+
 “The beginning is always NOW.”  ― Roy Bennett
 
 
@@ -70,3 +72,7 @@ Every dollar counts and will help our beleaguered plugin developers concentrate 
 
 = 1.0.0 =
 * The Hack Repair Guy's Plugin Archiver is born!
+
+
+“Have no fear of perfection - you'll never reach it.”  ― Salvador Dali
+
