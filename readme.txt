@@ -70,7 +70,7 @@ Every dollar counts and will help our beleaguered plugin developers concentrate 
 
 == Changelog ==
 
-= 1.0.1 =
+= 1.0.2 =
 * The Hack Repair Guy's Plugin Archiver is born!
 
 
