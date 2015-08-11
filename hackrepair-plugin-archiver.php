@@ -3,8 +3,8 @@
 Plugin Name: The Hack Repair Guy's Plugin Archiver
 Plugin URI: http://wordpress.org/extend/plugins/hackrepair-plugin-archiver/
 Description: Quickly deactivate and archive a plugin for later review. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
-Author: Jim Walker
-Version: 0.2.2
+Author: Jim Walker, The Hack Repair Guy
+Version: 0.2.3
 Author URI: http://hackrepair.com/hackrepair-plugin-archiver/
 */
 
