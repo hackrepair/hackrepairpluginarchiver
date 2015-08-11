@@ -66,6 +66,5 @@ If you would prefer to manually install The Hack Repair Guys Plugin Archiver fol
 
 == Changelog ==
 
-1.0.0
+= 1.0.0 =
 * The Hack Repair Guys Plugin Archiver is born!
-
