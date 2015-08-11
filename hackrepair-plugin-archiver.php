@@ -1,10 +1,10 @@
 <?php
 /*
-Plugin Name: The Hack Repair Guys Plugin Archiver
+Plugin Name: The Hack Repair Guy's Plugin Archiver
 Plugin URI: http://wordpress.org/extend/plugins/hackrepair-plugin-archiver/
 Description: Quickly deactivate and archive a plugin for later review. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
 Author: Jim Walker
-Version: 0.1.13
+Version: 0.2.0
 Author URI: http://hackrepair.com/hackrepair-plugin-archiver/
 */
 
@@ -132,7 +132,7 @@ class HackRepair_Plugin_Archiver {
 		HackRepair_Plugin_Archiver_Options::init(
 		'hackrepair-plugin-archiver',
 		__( 'Plugin Archiver',          'hackrepair-plugin-archiver' ),
-		__( 'The Hack Repair Guys Plugin Archiver: Settings', 'hackrepair-plugin-archiver' ),
+		__( 'The Hack Repair Guy\'s Plugin Archiver: Settings', 'hackrepair-plugin-archiver' ),
 		$fields,
 		$tabs,
 		'HackRepair_Plugin_Archiver',
@@ -274,7 +274,7 @@ class HackRepair_Plugin_Archiver {
 	}
 	public static function menu() {
 		$a = add_plugins_page( 
-			__( 'The Hack Repair Guys Plugin Archiver: Archived Plugins', 'hackrepair-plugin-archiver' ), 
+			__( 'The Hack Repair Guy\'s Plugin Archiver: Archived Plugins', 'hackrepair-plugin-archiver' ), 
 			__( 'Archived Plugins',        'hackrepair-plugin-archiver' ),
 			'install_plugins', 
 			'hackrepair-plugin-archiver', 
