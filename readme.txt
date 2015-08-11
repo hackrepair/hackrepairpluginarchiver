@@ -5,7 +5,7 @@ Tags: plugin archive, wordpress plugins, plugin backup, plugin restore
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
 Tested up to: 4.2.2
-Stable tag: 0.2.1
+Stable tag: 0.2.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,12 +17,15 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 **Why use The Hack Repair Guy's Plugin Archiver?**
 
+**Ever wished you could move plugins out of your WordPress Plugins list, but still have them readily available for installation later. <strong>The Hack Repair Guy's Plugin Archiver</strong> is the answer.**
+
+**Use cases:**
 * Maybe you have a set of plugins that you would like to install in all of your WordPress sites, but would rather not have them listed within Plugins (until you need them).
 * Maybe you've run into a buggy plugin, that when activated breaks your home page. The Hack Repair Guy's Plugin Archiver plugin will allow you to simply archive the plugin, preventing accidental activation.
 * Maybe you wish to test sets of plugins, pulling different sets of plugins into your plugin list as you need them; all with just a few clicks.
 * Maybe you share management with another administrator who believes the "Activate" link is an invitation to "click it!"
 
-**With The Hack Repair Guy's Plugin Archiver, you may upload or move plugins to your own custom archive directory. It's just that easy!**
+**With The Hack Repair Guy's Plugin Archiver, you may even upload or move plugins to your own custom archive directory.**
 
 
 == Why was this plugin created? ==

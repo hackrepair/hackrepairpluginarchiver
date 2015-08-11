@@ -6,8 +6,8 @@
 <p>Invariably, another administrator would log in a week or so later, see the plugin deactivated and "activate" it. This would often result in an emergency–and sadly, lots of finger pointing.</p>
 <p>So The Hack Repair Guy's Plugin Archiver plugin was born.</p>
 <p><strong>Plugin repository Description:</strong></p>
-<p>Ever wished you could move plugins out of your WordPress Plugins list, but still have them readily available for installation later. <strong>The Hack Repair Guy's Plugin Archiver</strong> is the answer.</p>
 <p><strong>Why use The Hack Repair Guy's Plugin Archiver?</strong></p>
+<p>Ever wished you could move plugins out of your WordPress Plugins list, but still have them readily available for installation later. <strong>The Hack Repair Guy's Plugin Archiver</strong> is the answer.</p>
 <ul class="ul-disc">
 <li>Maybe you have a set of plugins that you would like to install in all of your WordPress sites, but would rather not have them listed within Plugins (until you need them).</li>
 <li>Maybe you’ve run into a buggy plugin, that when activated breaks your home page. The Hack Repair Guy's Plugin Archiver plugin will allow you to simply archive the plugin, preventing accidental activation.</li>
