@@ -5,7 +5,7 @@ Tags: plugin archive, wordpress plugins, plugin backup, plugin restore
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
 Tested up to: 4.2.2
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,12 +13,15 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 = The Hack Repair Guy's Plugin Archiver allows you to move plugins out of the WordPress Plugins list but still have them readily available for installation or reactivation later. =
 
+https://youtu.be/i_Gn22bWLVs
+
+
 +++
 
 **Why use The Hack Repair Guy's Plugin Archiver?**
 
 * Maybe you have a set of plugins that you would like to install in all of your WordPress sites, but would rather not have them listed within Plugins (until you need them).
-* Maybe you've run into a buggy plugin, that when activated breaks your home page. The Hack Repair Guy's Plugin Archiver plugin will allow you to simply archive the plugin, preventing accidental activation.
+* Maybe you've run into a buggy or possibly compromised plugin, that when activated breaks or causes harm to your website. The Hack Repair Guy's Plugin Archiver plugin will allow you to simply archive the plugin, preventing accidental activation.
 * Maybe you wish to test sets of plugins, pulling different sets of plugins into your plugin list as you need them; all with just a few clicks.
 * Maybe you share management with another administrator who believes the "Activate" link is an invitation to "click it!"
 
@@ -27,8 +30,9 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 “The secret to getting ahead is getting started.”  ― Mark Twain
 
+== Frequently Asked Questions ==
 
-== Why was this plugin created? ==
+**Why was this plugin created?**
 
 In my day to day work cleaning malware from hacked websites, I sometimes run into situations where after updating WordPress, a plugin would break  the website (causing a white screen or error message).
 
@@ -38,13 +42,13 @@ Invariably, another administrator would log in a week or so later, see the plugi
 
 So The Hack Repair Guy's Plugin Archiver plugin was born.
 
-
-== Donations? ==
+**Donations?**
 
 If you find The Hack Repair Guy's Plugin Archiver useful, please consider donating $1 or more to our mutual cause.
 
 Every dollar counts and will help our beleaguered plugin developers concentrate on improvements and less about next month's rent. Donate for the cause at https://hackrepair.com/about/hackrepair-plugin-archiver
 
+“It's not how much we give but how much love we put into giving.”  ― Mother Teresa
 
 == Installation ==
 
@@ -67,6 +71,10 @@ Every dollar counts and will help our beleaguered plugin developers concentrate 
 
 “The beginning is always NOW.”  ― Roy Bennett
 
+
+== Screenshots ==
+
+https://youtu.be/i_Gn22bWLVs
 
 == Changelog ==
 
