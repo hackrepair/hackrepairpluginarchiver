@@ -219,7 +219,8 @@ class HackRepair_Plugin_Archiver_Options {
 
   // Validate user data for some/all of your input fields
   public static function validate($input) {
-    if ( !isset($input['archive_dir_add']) || $input['archive_dir_add'] ) {
+    if ( isset($input['archive_dir_add']) && $input['archive_dir_add'] ) {
+      $input['archive_dir_add'] = sanitize_title( $input['archive_dir_add'] );
       wp_mkdir_p( WP_CONTENT_DIR.'/plugins-'.$input['archive_dir_add'] );
       $input['archive_dir_add'] = '';
     }
