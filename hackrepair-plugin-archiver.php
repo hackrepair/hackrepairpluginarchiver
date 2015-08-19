@@ -458,7 +458,8 @@ class HackRepair_Plugin_Archiver {
 }
 
 // include admin classes - Bulk Action, List Table, Archive List Table
-if ( is_admin() ) {
+// removed the conditional to stop iThemes Sync from breaking
+// if ( is_admin() ) {
 	if (!class_exists('HackRepair_Plugin_Archiver_Bulk_Action')) {
 		require_once( 'includes/bulk.php' ); 
 	}
@@ -467,4 +468,4 @@ if ( is_admin() ) {
 		require_once( ABSPATH. 'wp-admin/includes/class-wp-list-table.php');
 	}
 	require_once( 'includes/list.php' );	
-}
+// }
