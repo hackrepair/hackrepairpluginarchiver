@@ -23,6 +23,8 @@ class HackRepair_Plugin_Archiver {
 		self::$options = wp_parse_args( $options, self::$options );
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( 'HackRepair_Plugin_Archiver', 'admin_init'  ) );
+		}
+		if ( class_exists('HackRepair_Plugin_Archiver_Bulk_Action') ) {
 			$bulk_action = new HackRepair_Plugin_Archiver_Bulk_Action();
 			$bulk_action->init();
 			$bulk_action->register_bulk_action( array(
@@ -458,8 +460,7 @@ class HackRepair_Plugin_Archiver {
 }
 
 // include admin classes - Bulk Action, List Table, Archive List Table
-// removed the conditional to stop iThemes Sync from breaking
-// if ( is_admin() ) {
+if ( is_admin() ) {
 	if (!class_exists('HackRepair_Plugin_Archiver_Bulk_Action')) {
 		require_once( 'includes/bulk.php' ); 
 	}
@@ -468,4 +469,4 @@ class HackRepair_Plugin_Archiver {
 		require_once( ABSPATH. 'wp-admin/includes/class-wp-list-table.php');
 	}
 	require_once( 'includes/list.php' );	
-// }
+}
