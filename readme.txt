@@ -5,7 +5,7 @@ Tags: plugin archive, wordpress plugins, plugin backup, plugin restore
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
 Tested up to: 4.2.4
-Stable tag: 1.0.8
+Stable tag: 1.0.9
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,19 +38,31 @@ In my day to day work cleaning malware from hacked websites, I sometimes run int
 
 This has left me with a predicament. In deactivating the plugin in question, the plugin itself remained activatable within the plugins list. 
 
-Invariably, another administrator would log in a week or so later, see the plugin deactivated and "activate" it. This would often result in an emergency–and sadly, lots of finger pointing.
+Invariably, another administrator would log in a week or so later, see the plugin deactivated and "activate" it. This would often result in an emergency–and sadly, lots of finger pointing. So The Hack Repair Guy's Plugin Archiver plugin was born.
 
-So The Hack Repair Guy's Plugin Archiver plugin was born.
++++
 
-**Question: If I deactivate or remove the plugin what will happen?**
- 
+**1. If I deactivate or remove the plugin what will happen?**
+
 Short answer: Nothing.
-Long answer: Archived plugins will remain where you left them (nicely archived), until you reactivate the The Hack Repair Guys Plugin Archiver plugin.
- 
-**Question: Are you planning an “unarchive all” option upon deletion of plugin?**
- 
+
+Long answer: Archived plugins will remain where you left them (nicely archived), until you reactivate the The Hack Repair Guy's Plugin Archiver plugin.
+
+**2. Are you planning an "unarchive all" upon deletion of plugin option?**
+
 Short answer: No.
-Long answer: The Hack Repair Guys Plugin Archiver was built around the concept of managing different versions of plugins saved within different archival directories. If we were to include an “unarchive all” upon deletion option, the plugin would not know which duplicate to unarchive. The result–none would be unarchived. So that feature, if implemented, would not perform as expected.
+
+Long answer: The Hack Repair Guy's Plugin Archiver was built around the concept of managing different versions of plugins saved within different archival directories. If we were to include an "unarchive all" upon deletion option, the plugin would not know which duplicate to unarchive. The result–none would be unarchived. So that feature, if implemented, would not perform as expected.
+
+**3. Why not just delete plugins?**
+
+Short answer: Archiving is way cooler!
+
+Long answer: Some plugins will delete data upon deletion. Not so fun if you’ve spent hours setting up a plugin, only to learn later, after deleting it, that all of the settings previously saved were “deleted.”
+
+Likewise, IMHO, some occasional use utility plugins simply don’t have a place in the active plugins list. Sure, plugins like WP Migrate, Velvet Blues Update URLs, Duplicator, or your favorite database optimization plugs are simple enough to delete. But why waste the effort. Just archive it!
+
++++
 
 **Donations?**
 
@@ -88,6 +100,9 @@ Every dollar counts and will help our beleaguered plugin developers concentrate 
 
 
 == Changelog ==
+
+= 1.0.9 =
+* Fixed WP Rocket incompatibility.
 
 = 1.0.8 =
 * Fixed iThemes Sync incompatibility.
