@@ -58,7 +58,11 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 			update_option( 'hackrepair-plugin-archiver_options', HackRepair_Plugin_Archiver::$options );
 		}
 		$all_plugins = HackRepair_Plugin_Archiver::get_archived_plugins($dir);
+		$wprocket = isset( $all_plugins['wp-rocket/wp-rocket.php'] ); 
 		$all_plugins = apply_filters( 'all_plugins', $all_plugins );
+		if ( !$wprocket ) {
+			unset( $all_plugins['wp-rocket/wp-rocket.php'] );
+		}
 		$plugins = array(
 			'all' => $all_plugins,
 		);
