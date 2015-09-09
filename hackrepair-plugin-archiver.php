@@ -14,13 +14,16 @@ add_action('plugins_loaded', array( 'HackRepair_Plugin_Archiver', 'init' ) );
 class HackRepair_Plugin_Archiver {
 	public static $count = 0;
 	public static $options = array(
-		'archive_dir' => 'plugins-archive',
+		'archive_dir' => '',
 		'archive_dir_add' => '',
 		'deactivate'  => true,
 	);
 	public static function init() {
 		$options = get_option( 'hackrepair-plugin-archiver_options' );
 		self::$options = wp_parse_args( $options, self::$options );
+		if ( '' === self::$options['archive_dir'] ) {
+			self::$options['archive_dir'] = 'plugins-archive-'.substr( md5( get_bloginfo( 'url' ) ), 0, 6);
+		}
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( 'HackRepair_Plugin_Archiver', 'admin_init'  ) );
 		}
@@ -51,6 +54,9 @@ class HackRepair_Plugin_Archiver {
 	    		$result[] = $dir['name'];
 	    	}
 	    }
+	    if ( !$result ) {
+	    	$result[] = self::$options['archive_dir'];
+	    } 
 	    return $result;
 	}
 	public static function pointer_filter( $pointers ) {
