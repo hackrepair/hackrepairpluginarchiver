@@ -5,7 +5,7 @@ Tags: plugin archive, wordpress plugins, plugin backup, plugin restore
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
 Tested up to: 4.2.4
-Stable tag: 1.0.9
+Stable tag: 2.0.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -100,6 +100,9 @@ Every dollar counts and will help our beleaguered plugin developers concentrate 
 
 
 == Changelog ==
+
+= 2.0.0 =
+* Randomized default plugin archive directory
 
 = 1.0.9 =
 * Fixed WP Rocket incompatibility.
