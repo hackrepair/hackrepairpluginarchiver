@@ -4,7 +4,7 @@ Contributors: tvcnet
 Tags: plugin archive, wordpress plugins, plugin backup, plugin restore
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
-Tested up to: 4.2.4
+Tested up to: 4.3.0
 Stable tag: 2.0.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
