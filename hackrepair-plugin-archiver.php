@@ -4,7 +4,7 @@ Plugin Name: The Hack Repair Guy's Plugin Archiver
 Plugin URI: http://wordpress.org/extend/plugins/hackrepair-plugin-archiver/
 Description: Quickly deactivate and archive a plugin for later use. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
 Author: Jim Walker, The Hack Repair Guy
-Version: 2.0.0
+Version: 2.0.1
 Author URI: http://hackrepair.com/hackrepair-plugin-archiver/
 */
 
@@ -13,12 +13,14 @@ add_action('plugins_loaded', array( 'HackRepair_Plugin_Archiver', 'init' ) );
 
 class HackRepair_Plugin_Archiver {
 	public static $count = 0;
+	public static $plugin_dir;
 	public static $options = array(
 		'archive_dir' => '',
 		'archive_dir_add' => '',
 		'deactivate'  => true,
 	);
 	public static function init() {
+		self::$plugin_dir = plugin_dir_path( __FILE__ );
 		$options = get_option( 'hackrepair-plugin-archiver_options' );
 		self::$options = wp_parse_args( $options, self::$options );
 		if ( '' === self::$options['archive_dir'] ) {
@@ -81,12 +83,12 @@ class HackRepair_Plugin_Archiver {
 		if ( 'plugins.php' === $pagenow ) {
 			$dirs = self::get_archive_dirs();
 			if ( 1 < sizeof($dirs) ) {
-				require_once ( 'includes/pointers.php' );
+				require_once ( self::$plugin_dir . 'includes/pointers.php' );
 				add_action( 'admin_enqueue_scripts', 				array( 'HackRepair_Plugin_Archiver_Pointer', 'enqueue_scripts' ) );
 				add_filter( 'hackrepair_plugin_archiver_pointers', 	array( 'HackRepair_Plugin_Archiver', 		 'pointer_filter' ) );
 			}
 		}
-		require_once ( 'includes/options.php' );
+		require_once ( self::$plugin_dir . 'includes/options.php' );
 		$archive_dirs = self::get_archive_dirs();
 		$fields =   array(
 			"general" => array(
@@ -149,7 +151,7 @@ class HackRepair_Plugin_Archiver {
 	}
 	public static function notes() {
 		echo '<div style="max-width: 600px; text-align:justify;">';
-		include_once ( 'includes/notes.php' );
+		include_once ( self::$plugin_dir . 'includes/notes.php' );
 		echo '</div>';
 	}
 
@@ -468,11 +470,11 @@ class HackRepair_Plugin_Archiver {
 // include admin classes - Bulk Action, List Table, Archive List Table
 if ( is_admin() ) {
 	if (!class_exists('HackRepair_Plugin_Archiver_Bulk_Action')) {
-		require_once( 'includes/bulk.php' ); 
+		require_once( self::$plugin_dir . 'includes/bulk.php' ); 
 	}
 
 	if ( !class_exists('WP_List_Table') ) {
 		require_once( ABSPATH. 'wp-admin/includes/class-wp-list-table.php');
 	}
-	require_once( 'includes/list.php' );	
+	require_once( self::$plugin_dir . 'includes/list.php' );	
 }
