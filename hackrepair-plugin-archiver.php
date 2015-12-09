@@ -470,11 +470,11 @@ class HackRepair_Plugin_Archiver {
 // include admin classes - Bulk Action, List Table, Archive List Table
 if ( is_admin() ) {
 	if (!class_exists('HackRepair_Plugin_Archiver_Bulk_Action')) {
-		require_once( self::$plugin_dir . 'includes/bulk.php' ); 
+		require_once( plugin_dir_path( __FILE__ ) . 'includes/bulk.php' ); 
 	}
 
 	if ( !class_exists('WP_List_Table') ) {
 		require_once( ABSPATH. 'wp-admin/includes/class-wp-list-table.php');
 	}
-	require_once( self::$plugin_dir . 'includes/list.php' );	
+	require_once( plugin_dir_path( __FILE__ ) . 'includes/list.php' );	
 }
