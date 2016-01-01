@@ -1,6 +1,6 @@
 === The Hack Repair Guy's Plugin Archiver ===
 
-Contributors: tvcnet
+Contributors: hackrepair, tvcnet
 Tags: plugin archive, wordpress plugins, plugin backup, plugin restore
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 4.2.2
