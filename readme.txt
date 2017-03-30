@@ -11,7 +11,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
 
-= The Hack Repair Guy's Plugin Archiver allows you to move plugins out of the WordPress Plugins list but still have them readily available for installation or reactivation later. =
+= The Hack Repair Guy's Plugin Archiver allows you to archive plugins or backup plugins by moving plugins out of the WordPress Plugins list while still having them readily available for installation or reactivation later. =
 
 [youtube https://www.youtube.com/watch?v=i_Gn22bWLVs]
 
@@ -21,7 +21,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 **Why use The Hack Repair Guy's Plugin Archiver?**
 
 * Maybe you have a set of plugins that you would like to install in all of your WordPress sites, but would rather not have them listed within Plugins (until you need them).
-* Maybe you've run into a buggy or possibly compromised plugin, that when activated breaks or causes harm to your website. The Hack Repair Guy's Plugin Archiver plugin will allow you to simply archive the plugin, preventing accidental activation.
+* Maybe you've run into a buggy or possibly compromised plugin, that when activated breaks or causes harm to your website. The Hack Repair Guy's Plugin Archiver plugin will allow you to simply archive plugins, preventing accidental activation.
 * Maybe you wish to test sets of plugins, pulling different sets of plugins into your plugin list as you need them; all with just a few clicks.
 * Maybe you share management with another administrator who believes the "Activate" link is an invitation to "click it!"
 
