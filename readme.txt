@@ -102,7 +102,7 @@ Every dollar counts and will help our beleaguered plugin developers concentrate 
 == Changelog ==
 
 = 2.0.2 =
-* 4.7.3 Compatible
+* 4.8.1 Compatible
 
 = 2.0.1 =
 * Fixed relative includes error on WordPress 4.4
