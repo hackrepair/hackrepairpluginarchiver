@@ -1,4 +1,10 @@
 <?php
+/**
+ * Prevent direct access to this file
+ */
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class WP_Plugins_Archive_List_Table extends WP_List_Table {
 
@@ -15,15 +21,24 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	public function __construct( $args = array() ) {
 		global $status, $page;
 
-		parent::__construct( array(
-			'plural' => 'plugins',
-			'screen' => isset( $args['screen'] ) ? $args['screen'] : 'plugins',
-		) );
+		// Only instantiate the list table for users who can manage plugins.
+		// This avoids exposing plugin UI to unauthorized users.
+		if ( ! current_user_can( 'install_plugins' ) ) {
+			return;
+		}
+
+		parent::__construct(
+			array(
+				'plural' => 'plugins',
+				'screen' => isset( $args['screen'] ) ? $args['screen'] : 'plugins',
+			)
+		);
 
 		$status = 'all';
 
-		if ( isset($_REQUEST['s']) )
-			$_SERVER['REQUEST_URI'] = add_query_arg('s', wp_unslash($_REQUEST['s']) );
+		if ( isset( $_REQUEST['s'] ) ) {
+			$_SERVER['REQUEST_URI'] = add_query_arg( 's', wp_unslash( $_REQUEST['s'] ) );
+		}
 
 		$page = $this->get_pagenum();
 	}
@@ -33,14 +48,20 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	}
 
 	// public function ajax_user_can() {
-	// 	return false current_user_can('activate_plugins');
+	// return false current_user_can('activate_plugins');
 	// }
 
 	public function prepare_items() {
 		global $status, $plugins, $totals, $page, $orderby, $order, $s;
 
+		// Only allow users with the appropriate capability to prepare and view plugin archive items.
+		if ( ! current_user_can( 'install_plugins' ) ) {
+			$this->items = array();
+			return;
+		}
+
 		wp_reset_vars( array( 'orderby', 'order', 's' ) );
-        $this->process_bulk_action();
+			$this->process_bulk_action();
 
 		/**
 		 * Filter the full array of plugins to list in the Plugins list table.
@@ -53,14 +74,16 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		 */
 		$dir = false;
 		if ( isset( $_REQUEST['archive_dir'] ) ) {
-			$dir =  WP_CONTENT_DIR . '/' . $_REQUEST['archive_dir']; 
-			HackRepair_Plugin_Archiver::$options['archive_dir'] = $_REQUEST['archive_dir'];
+			// Sanitize incoming archive_dir parameter before using it
+			$archive_dir = sanitize_file_name( wp_unslash( $_REQUEST['archive_dir'] ) );
+			$dir         = WP_CONTENT_DIR . '/' . $archive_dir;
+			HackRepair_Plugin_Archiver::$options['archive_dir'] = $archive_dir;
 			update_option( 'hackrepair-plugin-archiver_options', HackRepair_Plugin_Archiver::$options );
 		}
-		$all_plugins = HackRepair_Plugin_Archiver::get_archived_plugins($dir);
-		$wprocket = isset( $all_plugins['wp-rocket/wp-rocket.php'] ); 
+		$all_plugins = HackRepair_Plugin_Archiver::get_archived_plugins( $dir );
+		$wprocket    = isset( $all_plugins['wp-rocket/wp-rocket.php'] );
 		$all_plugins = apply_filters( 'all_plugins', $all_plugins );
-		if ( !$wprocket ) {
+		if ( ! $wprocket ) {
 			unset( $all_plugins['wp-rocket/wp-rocket.php'] );
 		}
 		$plugins = array(
@@ -72,67 +95,68 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		// set_transient( 'plugin_slugs', array_keys( $plugins['all'] ), DAY_IN_SECONDS );
 
 		// foreach ( (array) $plugins['all'] as $plugin_file => $plugin_data ) {
-		// 	// Extra info if known. array_merge() ensures $plugin_data has precedence if keys collide.
-		// 	if ( isset( $plugin_info->response[ $plugin_file ] ) ) {
-		// 		$plugins['all'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->response[ $plugin_file ], $plugin_data );
-		// 		// Make sure that $plugins['upgrade'] also receives the extra info since it is used on ?plugin_status=upgrade
-		// 		if ( isset( $plugins['upgrade'][ $plugin_file ] ) ) {
-		// 			$plugins['upgrade'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->response[ $plugin_file ], $plugin_data );
-		// 		}
-
-		// 	} elseif ( isset( $plugin_info->no_update[ $plugin_file ] ) ) {
-		// 		$plugins['all'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->no_update[ $plugin_file ], $plugin_data );
-		// 		// Make sure that $plugins['upgrade'] also receives the extra info since it is used on ?plugin_status=upgrade
-		// 		if ( isset( $plugins['upgrade'][ $plugin_file ] ) ) {
-		// 			$plugins['upgrade'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->no_update[ $plugin_file ], $plugin_data );
-		// 		}
-		// 	}
-
-		// 	// Filter into individual sections
-		// 	if ( is_multisite() && ! $screen->in_admin( 'network' ) && is_network_only_plugin( $plugin_file ) && ! is_plugin_active( $plugin_file ) ) {
-		// 		// On the non-network screen, filter out network-only plugins as long as they're not individually activated
-		// 		unset( $plugins['all'][ $plugin_file ] );
-		// 	} elseif ( ! $screen->in_admin( 'network' ) && is_plugin_active_for_network( $plugin_file ) ) {
-		// 		// On the non-network screen, filter out network activated plugins
-		// 		unset( $plugins['all'][ $plugin_file ] );
-		// 	} elseif ( ( ! $screen->in_admin( 'network' ) && is_plugin_active( $plugin_file ) )
-		// 		|| ( $screen->in_admin( 'network' ) && is_plugin_active_for_network( $plugin_file ) ) ) {
-		// 		// On the non-network screen, populate the active list with plugins that are individually activated
-		// 		// On the network-admin screen, populate the active list with plugins that are network activated
-		// 		$plugins['active'][ $plugin_file ] = $plugin_data;
-		// 	} else {
-		// 		if ( ! $screen->in_admin( 'network' ) && isset( $recently_activated[ $plugin_file ] ) ) {
-		// 			// On the non-network screen, populate the recently activated list with plugins that have been recently activated
-		// 			$plugins['recently_activated'][ $plugin_file ] = $plugin_data;
-		// 		}
-		// 		// Populate the inactive list with plugins that aren't activated
-		// 		$plugins['inactive'][ $plugin_file ] = $plugin_data;
-		// 	}
+		// Extra info if known. array_merge() ensures $plugin_data has precedence if keys collide.
+		// if ( isset( $plugin_info->response[ $plugin_file ] ) ) {
+		// $plugins['all'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->response[ $plugin_file ], $plugin_data );
+		// Make sure that $plugins['upgrade'] also receives the extra info since it is used on ?plugin_status=upgrade
+		// if ( isset( $plugins['upgrade'][ $plugin_file ] ) ) {
+		// $plugins['upgrade'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->response[ $plugin_file ], $plugin_data );
 		// }
 
+		// } elseif ( isset( $plugin_info->no_update[ $plugin_file ] ) ) {
+		// $plugins['all'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->no_update[ $plugin_file ], $plugin_data );
+		// Make sure that $plugins['upgrade'] also receives the extra info since it is used on ?plugin_status=upgrade
+		// if ( isset( $plugins['upgrade'][ $plugin_file ] ) ) {
+		// $plugins['upgrade'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->no_update[ $plugin_file ], $plugin_data );
+		// }
+		// }
+
+		// Filter into individual sections
+		// if ( is_multisite() && ! $screen->in_admin( 'network' ) && is_network_only_plugin( $plugin_file ) && ! is_plugin_active( $plugin_file ) ) {
+		// On the non-network screen, filter out network-only plugins as long as they're not individually activated
+		// unset( $plugins['all'][ $plugin_file ] );
+		// } elseif ( ! $screen->in_admin( 'network' ) && is_plugin_active_for_network( $plugin_file ) ) {
+		// On the non-network screen, filter out network activated plugins
+		// unset( $plugins['all'][ $plugin_file ] );
+		// } elseif ( ( ! $screen->in_admin( 'network' ) && is_plugin_active( $plugin_file ) )
+		// || ( $screen->in_admin( 'network' ) && is_plugin_active_for_network( $plugin_file ) ) ) {
+		// On the non-network screen, populate the active list with plugins that are individually activated
+		// On the network-admin screen, populate the active list with plugins that are network activated
+		// $plugins['active'][ $plugin_file ] = $plugin_data;
+		// } else {
+		// if ( ! $screen->in_admin( 'network' ) && isset( $recently_activated[ $plugin_file ] ) ) {
+		// On the non-network screen, populate the recently activated list with plugins that have been recently activated
+		// $plugins['recently_activated'][ $plugin_file ] = $plugin_data;
+		// }
+		// Populate the inactive list with plugins that aren't activated
+		// $plugins['inactive'][ $plugin_file ] = $plugin_data;
+		// }
+		// }
 
 		if ( $s ) {
-			$status = 'search';
+			$status            = 'search';
 			$plugins['search'] = array_filter( $plugins['all'], array( $this, '_search_callback' ) );
 		}
 
 		$totals = array();
-		foreach ( $plugins as $type => $list )
+		foreach ( $plugins as $type => $list ) {
 			$totals[ $type ] = count( $list );
+		}
 
-		if ( empty( $plugins[ $status ] ) && !in_array( $status, array( 'all', 'search' ) ) )
+		if ( empty( $plugins[ $status ] ) && ! in_array( $status, array( 'all', 'search' ) ) ) {
 			$status = 'all';
+		}
 
 		$this->items = array();
 		foreach ( $plugins[ $status ] as $plugin_file => $plugin_data ) {
 			// Translate, Don't Apply Markup, Sanitize HTML
-			$this->items[$plugin_file] = _get_plugin_data_markup_translate( $plugin_file, $plugin_data, false, true );
+			$this->items[ $plugin_file ] = _get_plugin_data_markup_translate( $plugin_file, $plugin_data, false, true );
 		}
 		$total_this_page = $totals[ $status ];
 
 		if ( $orderby ) {
 			$orderby = ucfirst( $orderby );
-			$order = strtoupper( $order );
+			$order   = strtoupper( $order );
 
 			uasort( $this->items, array( $this, '_order_callback' ) );
 		}
@@ -141,13 +165,16 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 
 		$start = ( $page - 1 ) * $plugins_per_page;
 
-		if ( $total_this_page > $plugins_per_page )
+		if ( $total_this_page > $plugins_per_page ) {
 			$this->items = array_slice( $this->items, $start, $plugins_per_page );
+		}
 
-		$this->set_pagination_args( array(
-			'total_items' => $total_this_page,
-			'per_page' => $plugins_per_page,
-		) );
+		$this->set_pagination_args(
+			array(
+				'total_items' => $total_this_page,
+				'per_page'    => $plugins_per_page,
+			)
+		);
 	}
 
 	/**
@@ -157,8 +184,10 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	 */
 	public function _search_callback( $plugin ) {
 		static $term;
-		if ( is_null( $term ) )
-			$term = wp_unslash( $_REQUEST['s'] );
+		if ( is_null( $term ) ) {
+			// Validate and sanitize search term
+			$term = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
+		}
 
 		foreach ( $plugin as $value ) {
 			if ( false !== stripos( strip_tags( $value ), $term ) ) {
@@ -179,16 +208,18 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	public function _order_callback( $plugin_a, $plugin_b ) {
 		global $orderby, $order;
 
-		$a = $plugin_a[$orderby];
-		$b = $plugin_b[$orderby];
+		$a = $plugin_a[ $orderby ];
+		$b = $plugin_b[ $orderby ];
 
-		if ( $a == $b )
+		if ( $a == $b ) {
 			return 0;
+		}
 
-		if ( 'DESC' == $order )
+		if ( 'DESC' == $order ) {
 			return ( $a < $b ) ? 1 : -1;
-		else
+		} else {
 			return ( $a < $b ) ? -1 : 1;
+		}
 	}
 
 	public function no_items() {
@@ -200,7 +231,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		global $status;
 
 		return array(
-			'cb'          => !in_array( $status, array( 'mustuse', 'dropins' ) ) ? '<input type="checkbox" />' : '',
+			'cb'          => ! in_array( $status, array( 'mustuse', 'dropins' ) ) ? '<input type="checkbox" />' : '',
 			'name'        => __( 'Plugin' ),
 			'description' => __( 'Description' ),
 		);
@@ -213,29 +244,30 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	protected function get_views() {
 		global $totals, $status;
 
-		$screen = $this->screen;
+		$screen       = $this->screen;
 		$status_links = array();
-		$dirs = HackRepair_Plugin_Archiver::get_archive_dirs();
-		foreach ($dirs as $dir) {
-			$key = $dir;
-			$name = preg_replace('/^plugins\-/ims', '', $dir );
-			$name = str_replace('-', ' ', $name);
-			$name[0] = strtoupper($name[0]);
-			$count = HackRepair_Plugin_Archiver::get_archived_plugins( WP_CONTENT_DIR.'/'.$dir );
-			$count = sizeof( $count );
+		$dirs         = HackRepair_Plugin_Archiver::get_archive_dirs();
+		foreach ( $dirs as $dir ) {
+			$key     = $dir;
+			$name    = preg_replace( '/^plugins\-/ims', '', $dir );
+			$name    = str_replace( '-', ' ', $name );
+			$name[0] = strtoupper( $name[0] );
+			$count   = HackRepair_Plugin_Archiver::get_archived_plugins( WP_CONTENT_DIR . '/' . $dir );
+			$count   = count( $count );
 			// if ( 1 > $count ) {
-			// 	continue;
+			// continue;
 			// }
-			$link = "<a href=\"%s\" %s>%s%s</a>";
+			$link = '<a href="%s" %s>%s%s</a>';
 			$href = admin_url( 'plugins.php?page=hackrepair-plugin-archiver' );
 			if ( $dir !== HackRepair_Plugin_Archiver::$options['archive_dir'] ) {
 				$href = add_query_arg( 'archive_dir', $dir, $href );
 			}
-			$status_links[$key] = sprintf( $link,
-				$href,
+			$status_links[ $key ] = sprintf(
+				$link,
+				esc_url( $href ),
 				( $dir == HackRepair_Plugin_Archiver::$options['archive_dir'] ) ? ' class="current"' : '',
-				$name, 
-				0 < $count ? " <span class=\"count\">(".number_format_i18n( $count ).")</span>" : ''
+				esc_html( $name ),
+				0 < $count ? ' <span class="count">(' . esc_html( number_format_i18n( $count ) ) . ')</span>' : ''
 			);
 		}
 		return $status_links;
@@ -257,8 +289,9 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	public function bulk_actions( $which = '' ) {
 		global $status;
 
-		if ( in_array( $status, array( 'mustuse', 'dropins' ) ) )
+		if ( in_array( $status, array( 'mustuse', 'dropins' ) ) ) {
 			return;
+		}
 
 		parent::bulk_actions( $which );
 	}
@@ -271,14 +304,14 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	protected function extra_tablenav( $which ) {
 		global $status;
 		echo '<div class="alignleft actions" style="margin-top:1px;">
-		    <a class="button action" href="'.admin_url( 'plugins.php?page=hackrepair-plugin-archiver&amp;action=restore-selected&amp;all=true').'">'.__( 'Unarchive All', 'hackrepair-plugin-archiver' ).'</a>
-		    <a class="button action" href="'.admin_url( 'options-general.php?page=hackrepair-plugin-archiver-settings').'">'.__( 'Plugin Archiver Settings', 'hackrepair-plugin-archiver' ).'</a>
+		    <a class="button action" href="' . esc_url( wp_nonce_url( admin_url( 'plugins.php?page=hackrepair-plugin-archiver&action=restore-selected&all=true' ), 'bulk-plugins' ) ) . '">' . __( 'Unarchive All', 'hackrepair-plugin-archiver' ) . '</a>
 		  </div>';
 	}
 
 	public function current_action() {
-		if ( isset($_POST['clear-recent-list']) )
+		if ( isset( $_POST['clear-recent-list'] ) ) {
 			return 'clear-recent-list';
+		}
 
 		return parent::current_action();
 	}
@@ -287,10 +320,11 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		global $status;
 
 		// if ( is_multisite() && ! $this->screen->in_admin( 'network' ) && in_array( $status, array( 'mustuse', 'dropins' ) ) )
-		// 	return;
+		// return;
 
-		foreach ( $this->items as $plugin_file => $plugin_data )
+		foreach ( $this->items as $plugin_file => $plugin_data ) {
 			$this->single_row( array( $plugin_file, $plugin_data ) );
+		}
 	}
 
 	/**
@@ -304,16 +338,17 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		global $status, $page, $s, $totals;
 
 		list( $plugin_file, $plugin_data ) = $item;
-		$context = $status;
-		$screen = $this->screen;
+		$context                           = $status;
+		$screen                            = $this->screen;
 
 		// Pre-order.
-		$actions = array(
-			'restore' => '<a href="' . wp_nonce_url('plugins.php?page=hackrepair-plugin-archiver&amp;action=restore-selected&amp;checked%5B0%5D=' . $plugin_file . '&amp;paged=' . $page . '&amp;s=' . $s, 'bulk-plugins') . '" title="' . esc_attr__('Unarchive this plugin','hackrepair-plugin-archiver') . '">' . __('Unarchive', 'hackrepair-plugin-archiver') . '</a>',
-			'remove' => '<a href="' . wp_nonce_url('plugins.php?page=hackrepair-plugin-archiver&amp;action=remove-selected&amp;checked%5B0%5D=' . $plugin_file . '&amp;paged=' . $page . '&amp;s=' . $s, 'bulk-plugins') . '" title="' . esc_attr__('Delete this plugin','hackrepair-plugin-archiver') . '" class="delete">' . __('Delete', 'hackrepair-plugin-archiver') . '</a>',
-		);
-
-
+		$actions = array();
+		if ( current_user_can( 'install_plugins' ) ) {
+			$restore_url        = wp_nonce_url( 'plugins.php?page=hackrepair-plugin-archiver&action=restore-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ) . '&paged=' . intval( $page ) . '&s=' . rawurlencode( $s ), 'bulk-plugins' );
+			$remove_url         = wp_nonce_url( 'plugins.php?page=hackrepair-plugin-archiver&action=remove-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ) . '&paged=' . intval( $page ) . '&s=' . rawurlencode( $s ), 'bulk-plugins' );
+			$actions['restore'] = '<a href="' . esc_url( $restore_url ) . '" title="' . esc_attr__( 'Unarchive this plugin', 'hackrepair-plugin-archiver' ) . '">' . esc_html__( 'Unarchive', 'hackrepair-plugin-archiver' ) . '</a>';
+			$actions['remove']  = '<a href="' . esc_url( $remove_url ) . '" title="' . esc_attr__( 'Delete this plugin', 'hackrepair-plugin-archiver' ) . '" class="delete">' . esc_html__( 'Delete', 'hackrepair-plugin-archiver' ) . '</a>';
+		}
 
 		$prefix = $screen->in_admin( 'network' ) ? 'network_admin_' : '';
 
@@ -365,12 +400,12 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		 */
 		$actions = apply_filters( $prefix . "plugin_action_links_$plugin_file", $actions, $plugin_file, $plugin_data, $context );
 
-		$class = 'inactive';
-		$checkbox_id =  "checkbox_" . md5($plugin_data['Name']);
+		$class       = 'inactive';
+		$checkbox_id = 'checkbox_' . md5( $plugin_data['Name'] );
 		if ( in_array( $status, array( 'mustuse', 'dropins' ) ) ) {
 			$checkbox = '';
 		} else {
-			$checkbox = "<label class='screen-reader-text' for='" . $checkbox_id . "' >" . sprintf( __( 'Select %s' ), $plugin_data['Name'] ) . "</label>"
+			$checkbox = "<label class='screen-reader-text' for='" . $checkbox_id . "' >" . sprintf( __( 'Select %s' ), $plugin_data['Name'] ) . '</label>'
 				. "<input type='checkbox' name='checked[]' value='" . esc_attr( $plugin_file ) . "' id='" . $checkbox_id . "' />";
 		}
 		if ( 'dropins' != $context ) {
@@ -379,14 +414,16 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		}
 
 		$id = sanitize_title( $plugin_name );
-		if ( ! empty( $totals['upgrade'] ) && ! empty( $plugin_data['update'] ) )
+		if ( ! empty( $totals['upgrade'] ) && ! empty( $plugin_data['update'] ) ) {
 			$class .= ' update';
+		}
 
 		$plugin_slug = ( isset( $plugin_data['slug'] ) ) ? $plugin_data['slug'] : '';
-		printf( "<tr id='%s' class='%s' data-slug='%s'>",
-			$id,
-			$class,
-			$plugin_slug
+		printf(
+			"<tr id='%s' class='%s' data-slug='%s'>",
+			esc_attr( $id ),
+			esc_attr( $class ),
+			esc_attr( $plugin_slug )
 		);
 
 		list( $columns, $hidden ) = $this->get_column_info();
@@ -395,44 +432,55 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 
 		foreach ( $columns as $column_name => $column_display_name ) {
 			$style = '';
-			if ( in_array( $column_name, $hidden ) )
+			if ( in_array( $column_name, $hidden ) ) {
 				$style = ' style="display:none;"';
+			}
 
 			switch ( $column_name ) {
 				case 'cb':
 					echo "<th scope='row' class='check-column'>$checkbox</th>";
 					break;
 				case 'name':
-					echo "<td class='plugin-title'$style><strong>$plugin_name</strong>";
+					echo "<td class='plugin-title'$style><strong>" . esc_html( $plugin_name ) . "</strong>";
 					echo $this->row_actions( $actions, true );
-					echo "</td>";
+					echo '</td>';
 					break;
 				case 'description':
 					echo "<td class='column-description desc'$style>
-						<div class='plugin-description'>$description</div>
-						<div class='$class second plugin-version-author-uri'>";
+						<div class='plugin-description'>" . wp_kses_post( $description ) . "</div>
+						<div class='" . esc_attr( $class ) . " second plugin-version-author-uri'>";
 
 					$plugin_meta = array();
-					if ( !empty( $plugin_data['Version'] ) )
-						$plugin_meta[] = sprintf( __( 'Version %s' ), $plugin_data['Version'] );
-					if ( !empty( $plugin_data['Author'] ) ) {
-						$author = $plugin_data['Author'];
-						if ( !empty( $plugin_data['AuthorURI'] ) )
-							$author = '<a href="' . $plugin_data['AuthorURI'] . '">' . $plugin_data['Author'] . '</a>';
+					if ( ! empty( $plugin_data['Version'] ) ) {
+						$plugin_meta[] = esc_html( sprintf( __( 'Version %s' ), $plugin_data['Version'] ) );
+					}
+					if ( ! empty( $plugin_data['Author'] ) ) {
+						$author_name = esc_html( $plugin_data['Author'] );
+						if ( ! empty( $plugin_data['AuthorURI'] ) ) {
+							$author = '<a href="' . esc_url( $plugin_data['AuthorURI'] ) . '">' . $author_name . '</a>';
+						} else {
+							$author = $author_name;
+						}
 						$plugin_meta[] = sprintf( __( 'By %s' ), $author );
 					}
 
 					// Details link using API info, if available
 					if ( isset( $plugin_data['slug'] ) && current_user_can( 'install_plugins' ) ) {
-						$plugin_meta[] = sprintf( '<a href="%s" class="thickbox" aria-label="%s" data-title="%s">%s</a>',
-							esc_url( network_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . $plugin_data['slug'] .
-								'&TB_iframe=true&width=600&height=550' ) ),
+						$plugin_meta[] = sprintf(
+							'<a href="%s" class="thickbox" aria-label="%s" data-title="%s">%s</a>',
+							esc_url(
+								network_admin_url(
+									'plugin-install.php?tab=plugin-information&plugin=' . $plugin_data['slug'] .
+									'&TB_iframe=true&width=600&height=550'
+								)
+							),
 							esc_attr( sprintf( __( 'More information about %s' ), $plugin_name ) ),
 							esc_attr( $plugin_name ),
 							__( 'View details' )
 						);
 					} elseif ( ! empty( $plugin_data['PluginURI'] ) ) {
-						$plugin_meta[] = sprintf( '<a href="%s">%s</a>',
+						$plugin_meta[] = sprintf(
+							'<a href="%s">%s</a>',
 							esc_url( $plugin_data['PluginURI'] ),
 							__( 'Visit plugin site' )
 						);
@@ -455,7 +503,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 					$plugin_meta = apply_filters( 'plugin_row_meta', $plugin_meta, $plugin_file, $plugin_data, $status );
 					echo implode( ' | ', $plugin_meta );
 
-					echo "</div></td>";
+					echo '</div></td>';
 					break;
 				default:
 					echo "<td class='$column_name column-$column_name'$style>";
@@ -470,11 +518,11 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 					 * @param array  $plugin_data An array of plugin data.
 					 */
 					do_action( 'manage_plugins_custom_column', $column_name, $plugin_file, $plugin_data );
-					echo "</td>";
+					echo '</td>';
 			}
 		}
 
-		echo "</tr>";
+		echo '</tr>';
 
 		/**
 		 * Fires after each row in the Plugins list table.
@@ -505,5 +553,4 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		 */
 		do_action( "after_plugin_row_$plugin_file", $plugin_file, $plugin_data, $status );
 	}
-
 }

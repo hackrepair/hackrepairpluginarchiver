@@ -1,38 +1,54 @@
-<?php 
+<?php
+/**
+ * Prevent direct access to this file
+ */
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class HackRepair_Plugin_Archiver_Pointer {
 	public static $pointers = array();
 	public static function enqueue_scripts( $hook_suffix ) {
-		self::$pointers = apply_filters( 'hackrepair_plugin_archiver_pointers',     self::$pointers );
-		// Check if screen related pointer is registered
-		if ( empty( self::$pointers[ $hook_suffix ] ) )
+		// Only load pointer scripts for users with sufficient permissions
+		if ( ! current_user_can( 'install_plugins' ) ) {
 			return;
+		}
+
+		self::$pointers = apply_filters( 'hackrepair_plugin_archiver_pointers', self::$pointers );
+		// Check if screen related pointer is registered
+		if ( empty( self::$pointers[ $hook_suffix ] ) ) {
+			return;
+		}
 		$pointers = (array) self::$pointers[ $hook_suffix ];
 		// Get dismissed pointers
-		$dismissed = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
+		$dismissed    = explode( ',', (string) get_user_meta( get_current_user_id(), 'dismissed_wp_pointers', true ) );
 		$got_pointers = false;
 		foreach ( $pointers as $key => $pointer ) {
-			if ( in_array( $key, $dismissed ) )
+			if ( in_array( $key, $dismissed ) ) {
 				continue;
+			}
 			if ( isset( $pointer['caps'] ) ) {
 				foreach ( $pointer['caps'] as $cap ) {
-					if ( ! current_user_can( $cap ) )
+					if ( ! current_user_can( $cap ) ) {
 						continue 2;
+					}
 				}
 			}
 			$callback = is_callable( $pointer['callback'] ) ? $pointer['callback'] : array( 'HackRepair_Plugin_Archiver_Pointer', $pointer['callback'] );
 			add_action( 'admin_print_footer_scripts', $callback );
 			$got_pointers = true;
 		}
-		if ( ! $got_pointers )
+		if ( ! $got_pointers ) {
 			return;
+		}
 		// Add pointers script and style to queue
 		wp_enqueue_style( 'wp-pointer' );
 		wp_enqueue_script( 'wp-pointer' );
 	}
 	public static function print_js( $pointer_id, $selector, $args ) {
-		if ( empty( $pointer_id ) || empty( $selector ) || empty( $args ) || empty( $args['content'] ) )
+		if ( empty( $pointer_id ) || empty( $selector ) || empty( $args ) || empty( $args['content'] ) ) {
 			return;
+		}
 
 		?>
 		<script type="text/javascript">
