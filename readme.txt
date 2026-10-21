@@ -3,7 +3,7 @@ Contributors: hackrepair, tvcnet
 Tags: archive, plugins, deactivate, plugin manager, security
 Donate link: https://hackrepair.com/donations/buy-jim-a-coffee
 Requires at least: 6.6
-Tested up to: 7.1.3
+Tested up to: 7.1
 Requires PHP: 7.4
 Stable tag: 3.3.2
 License: GPLv3
@@ -136,6 +136,7 @@ Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not i
 - Fix: when every selected plugin is skipped, only the reason is shown, not "0 plugins archived successfully"
 - With DISALLOW_FILE_MODS the New Archive field is disabled with an explanation, and the archive list has no checkboxes
 - Refused actions now return 403 Forbidden (400 for an unknown action)
+- WordPress.org Plugin Check clean-up: the list no longer calls a private WordPress function, submitted values are unslashed and sanitized, the "Tested up to" header names the major version, and the unneeded load_plugin_textdomain() call is removed (WordPress loads translations itself)
 
 = 3.3.1 =
 - Fix: archived plugins no longer show an Archive link in the Archived Plugins list

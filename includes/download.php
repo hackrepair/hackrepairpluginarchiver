@@ -122,7 +122,7 @@ class HackRepair_Plugin_Archiver_Download {
 		}
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Verified below.
 		$archive     = isset( $_GET['archive'] ) ? sanitize_file_name( wp_unslash( $_GET['archive'] ) ) : '';
-		$plugin_file = isset( $_GET['plugin'] ) ? wp_unslash( $_GET['plugin'] ) : '';
+		$plugin_file = isset( $_GET['plugin'] ) ? sanitize_text_field( wp_unslash( $_GET['plugin'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 		if ( ! is_string( $plugin_file ) || ! self::is_valid_plugin_file( $plugin_file ) || ! HackRepair_Plugin_Archiver_Security::is_registered( $archive ) ) {
 			wp_die( esc_html__( 'That plugin could not be found in the archive.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 404 ) );

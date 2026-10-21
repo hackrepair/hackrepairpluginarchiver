@@ -44,7 +44,6 @@ class HackRepair_Plugin_Archiver {
 		'deactivate'      => true,
 	);
 	public static function init() {
-		load_plugin_textdomain( 'hackrepair-plugin-archiver', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 		self::$plugin_dir = plugin_dir_path( __FILE__ );
 		$options          = get_option( 'hackrepair-plugin-archiver_options' );
 		self::$options    = wp_parse_args( $options, self::$options );
@@ -548,6 +547,20 @@ class HackRepair_Plugin_Archiver {
 		echo '<div class="notice notice-warning"><p>' . esc_html( sprintf( $text, $skipped ) ) . '</p></div>';
 	}
 
+	/**
+	 * The plugin files ticked on a list screen, unslashed and cleaned. Callers verify the nonce first.
+	 *
+	 * @return array
+	 */
+	private static function checked_from_request() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Every caller has already verified the nonce.
+		if ( ! isset( $_REQUEST['checked'] ) || ! is_array( $_REQUEST['checked'] ) ) {
+			return array();
+		}
+		return array_map( 'sanitize_text_field', wp_unslash( $_REQUEST['checked'] ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+	}
+
 	// action link filter
 	public static function action_link( $actions, $plugin_file, $plugin_data, $context ) {
 		$exclude_context = array( 'mustuse', 'dropins' );
@@ -601,7 +614,7 @@ class HackRepair_Plugin_Archiver {
 			$archive_dir = self::prepare_archive_dir();
 			$count       = 0;
 			// Validate that checked is an array
-			$checked_plugins = isset( $_REQUEST['checked'] ) && is_array( $_REQUEST['checked'] ) ? $_REQUEST['checked'] : array();
+			$checked_plugins = self::checked_from_request();
 			foreach ( $checked_plugins as $plugin ) {
 				// Sanitize plugin name
 				$plugin = wp_unslash( $plugin );// Validate plugin name format
@@ -655,13 +668,13 @@ class HackRepair_Plugin_Archiver {
 			// Sanitize archive directory
 			$archive_dir = self::prepare_archive_dir();
 			$count       = 0;
-			if ( isset( $_REQUEST['all'] ) && $_REQUEST['all'] ) {
+			if ( isset( $_REQUEST['all'] ) && rest_sanitize_boolean( sanitize_text_field( wp_unslash( $_REQUEST['all'] ) ) ) ) {
 				$plugins  = self::get_archived_plugins();
 				$checked  = array_keys( $plugins );
 				$redirect = admin_url( 'plugins.php' );
 			} else {
 				// Validate that checked is an array
-				$checked = isset( $_REQUEST['checked'] ) && is_array( $_REQUEST['checked'] ) ? $_REQUEST['checked'] : array();
+				$checked = self::checked_from_request();
 			}
 			foreach ( $checked as $plugin ) {
 				// Sanitize plugin name
@@ -729,7 +742,7 @@ class HackRepair_Plugin_Archiver {
 			$archive_dir = self::prepare_archive_dir();
 			$count       = 0;
 			// Validate that checked is an array
-			$checked_plugins = is_array( $checked ) ? $checked : ( isset( $_REQUEST['checked'] ) && is_array( $_REQUEST['checked'] ) ? wp_unslash( $_REQUEST['checked'] ) : array() );
+			$checked_plugins = is_array( $checked ) ? $checked : self::checked_from_request();
 			foreach ( $checked_plugins as $plugin ) {
 				$original_plugin = $plugin; // Keep original for diagnostics
 				// Existing behavior: sanitize removes slashes; keep for now to validate root cause via logs.

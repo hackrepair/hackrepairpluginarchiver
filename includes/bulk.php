@@ -86,7 +86,7 @@ class HackRepair_Plugin_Archiver_Bulk_Action {
 		check_admin_referer( 'bulk-plugins' );
 
 		// Sanitize and validate the incoming checked plugin list
-		$raw_checked = isset( $_REQUEST['checked'] ) && is_array( $_REQUEST['checked'] ) ? wp_unslash( $_REQUEST['checked'] ) : array();
+		$raw_checked = isset( $_REQUEST['checked'] ) && is_array( $_REQUEST['checked'] ) ? array_map( 'sanitize_text_field', wp_unslash( $_REQUEST['checked'] ) ) : array();
 		$post_ids    = array();
 		foreach ( $raw_checked as $p ) {
 			$p = sanitize_text_field( $p );

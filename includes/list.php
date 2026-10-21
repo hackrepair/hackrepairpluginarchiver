@@ -61,7 +61,7 @@ class HackRepair_Plugin_Archiver_List_Table extends WP_List_Table {
 		$status = 'all';
 
 		if ( isset( $_REQUEST['s'] ) ) {
-			$_SERVER['REQUEST_URI'] = add_query_arg( 's', wp_unslash( $_REQUEST['s'] ) );
+			$_SERVER['REQUEST_URI'] = add_query_arg( 's', sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) );
 		}
 
 		$page = $this->get_pagenum();
@@ -135,8 +135,7 @@ class HackRepair_Plugin_Archiver_List_Table extends WP_List_Table {
 
 		$this->items = array();
 		foreach ( $plugins[ $status ] as $plugin_file => $plugin_data ) {
-			// Translate, Don't Apply Markup, Sanitize HTML
-			$this->items[ $plugin_file ] = _get_plugin_data_markup_translate( $plugin_file, $plugin_data, false, true );
+			$this->items[ $plugin_file ] = self::clean_plugin_data( $plugin_data );
 		}
 		$total_this_page = $totals[ $status ];
 
@@ -226,6 +225,39 @@ class HackRepair_Plugin_Archiver_List_Table extends WP_List_Table {
 	public function no_items() {
 		global $plugins;
 		esc_html_e( 'You do not appear to have any archived plugins', 'hackrepair-plugin-archiver' );
+	}
+
+	/**
+	 * Make the header fields of an archived plugin safe to print (same rules core uses on the Plugins screen).
+	 *
+	 * @param array $plugin_data Plugin header data.
+	 * @return array
+	 */
+	private static function clean_plugin_data( $plugin_data ) {
+		$in_links        = array(
+			'abbr'    => array( 'title' => true ),
+			'acronym' => array( 'title' => true ),
+			'code'    => true,
+			'em'      => true,
+			'strong'  => true,
+		);
+		$with_links      = $in_links;
+		$with_links['a'] = array(
+			'href'  => true,
+			'title' => true,
+		);
+		foreach ( array( 'Name', 'Author', 'Description', 'Version', 'PluginURI', 'AuthorURI' ) as $field ) {
+			$plugin_data[ $field ] = isset( $plugin_data[ $field ] ) ? $plugin_data[ $field ] : '';
+		}
+		$plugin_data['Name']        = wp_kses( $plugin_data['Name'], $in_links );
+		$plugin_data['Author']      = wp_kses( $plugin_data['Author'], $with_links );
+		$plugin_data['Description'] = wp_kses( $plugin_data['Description'], $with_links );
+		$plugin_data['Version']     = wp_kses( $plugin_data['Version'], $with_links );
+		$plugin_data['PluginURI']   = esc_url( $plugin_data['PluginURI'] );
+		$plugin_data['AuthorURI']   = esc_url( $plugin_data['AuthorURI'] );
+		$plugin_data['Title']       = $plugin_data['Name'];
+		$plugin_data['AuthorName']  = $plugin_data['Author'];
+		return $plugin_data;
 	}
 
 	/**
