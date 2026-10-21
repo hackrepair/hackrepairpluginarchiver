@@ -85,7 +85,7 @@ class HackRepair_Plugin_Archiver_Bulk_Action {
 
 		// allow only defined actions
 		$allowed_actions = array_keys( $this->actions );
-		if ( ! in_array( $action, $allowed_actions ) ) {
+		if ( ! in_array( $action, $allowed_actions, true ) ) {
 			return;
 		}
 
@@ -122,7 +122,7 @@ class HackRepair_Plugin_Archiver_Bulk_Action {
 					return $el instanceof Closure;
 				}
 			);
-			if ( count( $anon_fns ) != 0 ) {
+			if ( 0 !== count( $anon_fns ) ) {
 				// Finally use the callback
 				$result = $this->actions[ $action ]['callback']( $post_ids );
 			} else {
@@ -152,7 +152,7 @@ class HackRepair_Plugin_Archiver_Bulk_Action {
 	function custom_bulk_admin_notices() {
 		global $pagenow;
 
-		if ( $pagenow == 'plugins.php' ) {
+		if ( $pagenow === 'plugins.php' ) {
 			$success_action = isset( $_REQUEST['success_action'] ) ? sanitize_key( wp_unslash( $_REQUEST['success_action'] ) ) : '';
 			if ( $success_action && isset( $this->actions[ $success_action ] ) ) {
 				// Print notice in admin bar

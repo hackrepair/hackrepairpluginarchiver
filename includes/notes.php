@@ -1,7 +1,12 @@
 <?php
 /**
- * Prevent direct access to this file
+ * Notes content for the HackRepair Plugin Archiver plugin.
+ *
+ * Displays descriptive text about the plugin on the settings screen.
+ *
+ * @package hackrepair-plugin-archiver
  */
+// Prevent direct access to this file.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }

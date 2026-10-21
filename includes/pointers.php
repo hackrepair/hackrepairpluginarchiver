@@ -6,6 +6,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Pointer helper class for displaying admin pointers.
+ *
+ * @package hackrepair-plugin-archiver
+ */
 class HackRepair_Plugin_Archiver_Pointer {
 	public static $pointers = array();
 	public static function enqueue_scripts( $hook_suffix ) {
@@ -61,14 +66,14 @@ class HackRepair_Plugin_Archiver_Pointer {
 			options = $.extend( options, {
 				close: function() {
 					$.post( ajaxurl, {
-						pointer: '<?php echo $pointer_id; ?>',
+						pointer: <?php echo wp_json_encode( $pointer_id ); ?>,
 						action: 'dismiss-wp-pointer'
 					});
 				}
 			});
 
 			setup = function() {
-				$('<?php echo $selector; ?>').first().pointer( options ).pointer('open');
+				$('<?php echo esc_js( $selector ); ?>').first().pointer( options ).pointer('open');
 			};
 
 			if ( options.position && options.position.defer_loading )

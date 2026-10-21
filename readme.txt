@@ -1,14 +1,15 @@
 === The Hack Repair Guy's Plugin Archiver ===
-
 Contributors: hackrepair, tvcnet
-Tags: plugin archive, archive plugins, plugin backup, plugin restore, manage plugins, deactivate plugin
+Tags: admin, backup, database, security, performance
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 6.6
 Tested up to: 6.8.2
 Requires PHP: 7.4
 Stable tag: 3.1.1
-License: GPLv2
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+License: GPLv3
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
+
+Disable Plugins Without Deleting — Archive and Restore in One Click
 
 == Description ==
 

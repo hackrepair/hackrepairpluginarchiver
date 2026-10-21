@@ -143,7 +143,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 			$totals[ $type ] = count( $list );
 		}
 
-		if ( empty( $plugins[ $status ] ) && ! in_array( $status, array( 'all', 'search' ) ) ) {
+		if ( empty( $plugins[ $status ] ) && ! in_array( $status, array( 'all', 'search' ), true ) ) {
 			$status = 'all';
 		}
 
@@ -190,7 +190,8 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		}
 
 		foreach ( $plugin as $value ) {
-			if ( false !== stripos( strip_tags( $value ), $term ) ) {
+			// Use wp_strip_all_tags() instead of strip_tags() for sanitizing search text.
+			if ( false !== stripos( wp_strip_all_tags( $value ), $term ) ) {
 				return true;
 			}
 		}
@@ -211,11 +212,11 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		$a = $plugin_a[ $orderby ];
 		$b = $plugin_b[ $orderby ];
 
-		if ( $a == $b ) {
+		if ( $a === $b ) {
 			return 0;
 		}
 
-		if ( 'DESC' == $order ) {
+		if ( 'DESC' === $order ) {
 			return ( $a < $b ) ? 1 : -1;
 		} else {
 			return ( $a < $b ) ? -1 : 1;
@@ -224,16 +225,17 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 
 	public function no_items() {
 		global $plugins;
-		_e( 'You do not appear to have any archived plugins', 'hackrepair-plugin-archiver' );
+		esc_html_e( 'You do not appear to have any archived plugins', 'hackrepair-plugin-archiver' );
 	}
 
 	public function get_columns() {
 		global $status;
 
 		return array(
-			'cb'          => ! in_array( $status, array( 'mustuse', 'dropins' ) ) ? '<input type="checkbox" />' : '',
-			'name'        => __( 'Plugin' ),
-			'description' => __( 'Description' ),
+			'cb'          => ! in_array( $status, array( 'mustuse', 'dropins' ), true ) ? '<input type="checkbox" />' : '',
+			// Provide text domain for translations in the column headers.
+			'name'        => __( 'Plugin', 'hackrepair-plugin-archiver' ),
+			'description' => __( 'Description', 'hackrepair-plugin-archiver' ),
 		);
 	}
 
@@ -265,7 +267,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 			$status_links[ $key ] = sprintf(
 				$link,
 				esc_url( $href ),
-				( $dir == HackRepair_Plugin_Archiver::$options['archive_dir'] ) ? ' class="current"' : '',
+				( $dir === HackRepair_Plugin_Archiver::$options['archive_dir'] ) ? ' class="current"' : '',
 				esc_html( $name ),
 				0 < $count ? ' <span class="count">(' . esc_html( number_format_i18n( $count ) ) . ')</span>' : ''
 			);
@@ -289,7 +291,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	public function bulk_actions( $which = '' ) {
 		global $status;
 
-		if ( in_array( $status, array( 'mustuse', 'dropins' ) ) ) {
+		if ( in_array( $status, array( 'mustuse', 'dropins' ), true ) ) {
 			return;
 		}
 
@@ -402,13 +404,13 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 
 		$class       = 'inactive';
 		$checkbox_id = 'checkbox_' . md5( $plugin_data['Name'] );
-		if ( in_array( $status, array( 'mustuse', 'dropins' ) ) ) {
+		if ( in_array( $status, array( 'mustuse', 'dropins' ), true ) ) {
 			$checkbox = '';
 		} else {
-			$checkbox = "<label class='screen-reader-text' for='" . $checkbox_id . "' >" . sprintf( __( 'Select %s' ), $plugin_data['Name'] ) . '</label>'
+			$checkbox = "<label class='screen-reader-text' for='" . $checkbox_id . "' >" . sprintf( __( 'Select %s', 'hackrepair-plugin-archiver' ), $plugin_data['Name'] ) . '</label>'
 				. "<input type='checkbox' name='checked[]' value='" . esc_attr( $plugin_file ) . "' id='" . $checkbox_id . "' />";
 		}
-		if ( 'dropins' != $context ) {
+		if ( 'dropins' !== $context ) {
 			$description = '<p>' . ( $plugin_data['Description'] ? $plugin_data['Description'] : '&nbsp;' ) . '</p>';
 			$plugin_name = $plugin_data['Name'];
 		}
@@ -441,7 +443,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 					echo "<th scope='row' class='check-column'>$checkbox</th>";
 					break;
 				case 'name':
-					echo "<td class='plugin-title'$style><strong>" . esc_html( $plugin_name ) . "</strong>";
+					echo "<td class='plugin-title'$style><strong>" . esc_html( $plugin_name ) . '</strong>';
 					echo $this->row_actions( $actions, true );
 					echo '</td>';
 					break;
