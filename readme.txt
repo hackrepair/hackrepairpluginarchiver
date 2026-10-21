@@ -133,6 +133,12 @@ Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not i
 = 3.3.0 =
 - Fix: with DISALLOW_FILE_MODS the Archived Plugins screen and Download now stay available (read-only), as documented; viewing needs activate_plugins, changes still need install_plugins
 - Fix: the Plugins screen no longer stops users who lack install_plugins (for example multisite site administrators)
+- Fix: the Auto-deactivate before archiving box can now be turned off; settings keep only known values
+- Archiving or restoring onto an existing plugin folder now says how many were skipped and why
+- Switching the active archive from the list now needs a security token
+- Deleting the plugin on multisite now removes its settings from every site
+- Faster Plugins screen: the archive count is cached and the list code loads only where it is used
+- Code cleanup: all output escaped and translatable strings completed; unused code removed
 - New: Archived on and In the archive for columns in the Archived Plugins list, sortable; plugins archived earlier show an estimated date marked "about"
 - New: Activity Log tab (newest 500 actions, filters, paging, CSV export, clear)
 - New: Download an archived plugin as a zip file (single top-level folder, symbolic links skipped, 200 MB limit)

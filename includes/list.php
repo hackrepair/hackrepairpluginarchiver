@@ -1,12 +1,28 @@
 <?php
 /**
- * Prevent direct access to this file
+ * The Archived Plugins table.
+ *
+ * Modelled on core's WP_Plugins_List_Table: it shares core's list-table
+ * globals ($status, $plugins, $totals, $page, $orderby, $order) and fires
+ * core's own plugin-row hooks so other plugins' row links and columns keep
+ * working here. Those two patterns are intentional.
+ *
+ * @package HackRepair_Plugin_Archiver
  */
+
+// phpcs:disable WordPress.WP.GlobalVariablesOverride.Prohibited -- Mirrors core's WP_Plugins_List_Table globals.
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound, WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Core plugin-row hooks, fired on purpose.
+// phpcs:disable PSR2.Methods.MethodDeclaration.Underscore -- Callback names kept from core.
+// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only list parameters (search, sort, paging); changes are verified in archive_actions().
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class WP_Plugins_Archive_List_Table extends WP_List_Table {
+/**
+ * Archived Plugins list table.
+ */
+class HackRepair_Plugin_Archiver_List_Table extends WP_List_Table {
 
 	/**
 	 * Folder name of the archive being listed.
@@ -77,7 +93,8 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		 * @param array $plugins An array of plugins to display in the list table.
 		 */
 		$dir = false;
-		if ( isset( $_REQUEST['archive_dir'] ) ) {
+		// Switching the active archive changes a saved setting, so it needs a valid token.
+		if ( isset( $_REQUEST['archive_dir'], $_REQUEST['_hrpa_switch'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_REQUEST['_hrpa_switch'] ) ), 'hrpa_switch_archive' ) ) {
 			// Sanitize incoming archive_dir parameter before using it
 			$archive_dir = sanitize_file_name( wp_unslash( $_REQUEST['archive_dir'] ) );
 			// Only archives we know about can be selected.
@@ -91,8 +108,8 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		}
 		$this->archive = HackRepair_Plugin_Archiver_Security::active_name( HackRepair_Plugin_Archiver::$options['archive_dir'] );
 		$all_plugins   = HackRepair_Plugin_Archiver::get_archived_plugins( $dir );
-		$wprocket    = isset( $all_plugins['wp-rocket/wp-rocket.php'] );
-		$all_plugins = apply_filters( 'all_plugins', $all_plugins );
+		$wprocket      = isset( $all_plugins['wp-rocket/wp-rocket.php'] );
+		$all_plugins   = apply_filters( 'all_plugins', $all_plugins );
 		if ( ! $wprocket ) {
 			unset( $all_plugins['wp-rocket/wp-rocket.php'] );
 		}
@@ -249,17 +266,22 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		$dirs         = HackRepair_Plugin_Archiver::get_archive_dirs();
 		foreach ( $dirs as $dir => $name ) {
 			$key   = $dir;
-			$count = HackRepair_Plugin_Archiver::get_archived_plugins( WP_CONTENT_DIR . '/' . $dir );
-			$count = count( $count );
-			$link = '<a href="%s" %s>%s%s</a>';
-			$href = admin_url( 'plugins.php?page=hackrepair-plugin-archiver' );
-			if ( $dir !== HackRepair_Plugin_Archiver::$options['archive_dir'] ) {
-				$href = add_query_arg( 'archive_dir', $dir, $href );
+			$count = HackRepair_Plugin_Archiver::archived_count( $dir );
+			$link  = '<a href="%s" %s>%s%s</a>';
+			$href  = admin_url( 'plugins.php?page=hackrepair-plugin-archiver' );
+			if ( HackRepair_Plugin_Archiver::$options['archive_dir'] !== $dir ) {
+				$href = add_query_arg(
+					array(
+						'archive_dir'  => $dir,
+						'_hrpa_switch' => wp_create_nonce( 'hrpa_switch_archive' ),
+					),
+					$href
+				);
 			}
 			$status_links[ $key ] = sprintf(
 				$link,
 				esc_url( $href ),
-				( $dir === HackRepair_Plugin_Archiver::$options['archive_dir'] ) ? ' class="current"' : '',
+				( HackRepair_Plugin_Archiver::$options['archive_dir'] === $dir ) ? ' class="current"' : '',
 				esc_html( $name ),
 				0 < $count ? ' <span class="count">(' . esc_html( number_format_i18n( $count ) ) . ')</span>' : ''
 			);
@@ -304,16 +326,8 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 			return;
 		}
 		echo '<div class="alignleft actions" style="margin-top:1px;">
-		    <a class="button action" href="' . esc_url( wp_nonce_url( admin_url( 'plugins.php?page=hackrepair-plugin-archiver&action=restore-selected&all=true' ), 'bulk-plugins' ) ) . '">' . __( 'Unarchive All', 'hackrepair-plugin-archiver' ) . '</a>
+		    <a class="button action" href="' . esc_url( wp_nonce_url( admin_url( 'plugins.php?page=hackrepair-plugin-archiver&action=restore-selected&all=true' ), 'bulk-plugins' ) ) . '">' . esc_html__( 'Unarchive All', 'hackrepair-plugin-archiver' ) . '</a>
 		  </div>';
-	}
-
-	public function current_action() {
-		if ( isset( $_POST['clear-recent-list'] ) ) {
-			return 'clear-recent-list';
-		}
-
-		return parent::current_action();
 	}
 
 	public function display_rows() {
@@ -406,8 +420,10 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		if ( in_array( $status, array( 'mustuse', 'dropins' ), true ) ) {
 			$checkbox = '';
 		} else {
-			$checkbox = "<label class='screen-reader-text' for='" . $checkbox_id . "' >" . sprintf( __( 'Select %s', 'hackrepair-plugin-archiver' ), $plugin_data['Name'] ) . '</label>'
-				. "<input type='checkbox' name='checked[]' value='" . esc_attr( $plugin_file ) . "' id='" . $checkbox_id . "' />";
+			/* translators: %s: plugin name. */
+			$select_label = sprintf( __( 'Select %s', 'hackrepair-plugin-archiver' ), wp_strip_all_tags( $plugin_data['Name'] ) );
+			$checkbox     = '<label class="screen-reader-text" for="' . esc_attr( $checkbox_id ) . '">' . esc_html( $select_label ) . '</label>'
+				. '<input type="checkbox" name="checked[]" value="' . esc_attr( $plugin_file ) . '" id="' . esc_attr( $checkbox_id ) . '" />';
 		}
 		if ( 'dropins' !== $context ) {
 			$description = '<p>' . ( $plugin_data['Description'] ? $plugin_data['Description'] : '&nbsp;' ) . '</p>';
@@ -428,27 +444,27 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		);
 
 		list( $columns, $hidden ) = $this->get_column_info();
-		// var_dump($this->get_column_info());
-		// $columns = $this->get_columns();
 
 		foreach ( $columns as $column_name => $column_display_name ) {
 			$style = '';
-			if ( in_array( $column_name, $hidden ) ) {
+			if ( in_array( $column_name, $hidden, true ) ) {
 				$style = ' style="display:none;"';
 			}
 
 			switch ( $column_name ) {
 				case 'cb':
-					echo "<th scope='row' class='check-column'>$checkbox</th>";
+					echo '<th scope="row" class="check-column">' . $checkbox . '</th>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped parts above.
 					break;
 				case 'name':
+					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $style is a fixed string; dynamic parts are escaped.
 					echo "<td class='plugin-title'$style><strong>" . esc_html( $plugin_name ) . '</strong>';
-					echo $this->row_actions( $actions, true );
+					echo $this->row_actions( $actions, true ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core list-table markup of escaped links.
 					echo '</td>';
 					break;
 				case 'archived':
 				case 'duration':
 					list( $stamp, $exact ) = HackRepair_Plugin_Archiver_Records::archived_at( $this->archive, $plugin_file, $this->item_path( $plugin_file ) );
+					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $style is a fixed string; dynamic parts are escaped.
 					echo "<td class='column-" . esc_attr( $column_name ) . "'$style>";
 					if ( ! $stamp ) {
 						echo '&mdash;';
@@ -462,13 +478,15 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 					echo '</td>';
 					break;
 				case 'description':
+					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $style is a fixed string; dynamic parts are escaped.
 					echo "<td class='column-description desc'$style>
 						<div class='plugin-description'>" . wp_kses_post( $description ) . "</div>
 						<div class='" . esc_attr( $class ) . " second plugin-version-author-uri'>";
 
 					$plugin_meta = array();
 					if ( ! empty( $plugin_data['Version'] ) ) {
-						$plugin_meta[] = esc_html( sprintf( __( 'Version %s' ), $plugin_data['Version'] ) );
+						/* translators: %s: plugin version. */
+						$plugin_meta[] = esc_html( sprintf( __( 'Version %s', 'hackrepair-plugin-archiver' ), $plugin_data['Version'] ) );
 					}
 					if ( ! empty( $plugin_data['Author'] ) ) {
 						$author_name = esc_html( $plugin_data['Author'] );
@@ -477,7 +495,8 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 						} else {
 							$author = $author_name;
 						}
-						$plugin_meta[] = sprintf( __( 'By %s' ), $author );
+						/* translators: %s: plugin author. */
+						$plugin_meta[] = sprintf( esc_html__( 'By %s', 'hackrepair-plugin-archiver' ), $author );
 					}
 
 					// Details link using API info, if available
@@ -490,15 +509,16 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 									'&TB_iframe=true&width=600&height=550'
 								)
 							),
-							esc_attr( sprintf( __( 'More information about %s' ), $plugin_name ) ),
+							/* translators: %s: plugin name. */
+							esc_attr( sprintf( __( 'More information about %s', 'hackrepair-plugin-archiver' ), $plugin_name ) ),
 							esc_attr( $plugin_name ),
-							__( 'View details' )
+							esc_html__( 'View details', 'hackrepair-plugin-archiver' )
 						);
 					} elseif ( ! empty( $plugin_data['PluginURI'] ) ) {
 						$plugin_meta[] = sprintf(
 							'<a href="%s">%s</a>',
 							esc_url( $plugin_data['PluginURI'] ),
-							__( 'Visit plugin site' )
+							esc_html__( 'Visit plugin site', 'hackrepair-plugin-archiver' )
 						);
 					}
 
@@ -517,12 +537,12 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 					 *                            'Drop-ins', 'Search'.
 					 */
 					$plugin_meta = apply_filters( 'plugin_row_meta', $plugin_meta, $plugin_file, $plugin_data, $status );
-					echo implode( ' | ', $plugin_meta );
+					echo wp_kses_post( implode( ' | ', $plugin_meta ) );
 
 					echo '</div></td>';
 					break;
 				default:
-					echo "<td class='$column_name column-$column_name'$style>";
+					echo '<td class="' . esc_attr( $column_name . ' column-' . $column_name ) . '"' . $style . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $style is a fixed string.
 
 					/**
 					 * Fires inside each custom column of the Plugins list table.

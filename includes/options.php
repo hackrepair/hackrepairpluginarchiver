@@ -1,272 +1,292 @@
 <?php
 /**
- * Prevent direct access to this file
+ * Settings > Plugin Archiver: settings registration, field rendering, tabs and validation.
+ *
+ * @package HackRepair_Plugin_Archiver
  */
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// ========================================== SETTINGS
-
+/**
+ * The settings screen.
+ */
 class HackRepair_Plugin_Archiver_Options {
-	private static $defaults     = array();
-	private static $fields       = array();
-	private static $tabs         = array();
-	private static $id           = '';
-	private static $menu_title   = '';
-	private static $title        = '';
-	private static $description  = '';
-	private static $file         = '';
-	private static $role         = 'manage_options';
-	private static $parent_class = '';
+	/**
+	 * Settings fields, grouped by section.
+	 *
+	 * @var array
+	 */
+	private static $fields = array();
 
-	public static function init( $id, $menu_title, $title, $fields, $tabs, $parent_class, $file = false, $role = false ) {
-		self::$fields       = $fields;
-		self::$tabs         = $tabs;
-		self::$file         = $file ? $file : __FILE__;
-		self::$id           = $id . '_options';
-		self::$menu_title   = $menu_title;
-		self::$title        = $title;
-		self::$parent_class = $parent_class;
-		self::$role         = $role ? $role : self::$role;
+	/**
+	 * Screen tabs.
+	 *
+	 * @var array
+	 */
+	private static $tabs = array();
+
+	/**
+	 * Option name and settings group.
+	 *
+	 * @var string
+	 */
+	private static $id = '';
+
+	/**
+	 * Menu title.
+	 *
+	 * @var string
+	 */
+	private static $menu_title = '';
+
+	/**
+	 * Screen title.
+	 *
+	 * @var string
+	 */
+	private static $title = '';
+
+	/**
+	 * Screen slug.
+	 *
+	 * @var string
+	 */
+	private static $file = '';
+
+	/**
+	 * Capability needed for the screen.
+	 *
+	 * @var string
+	 */
+	private static $role = 'manage_options';
+
+	/**
+	 * Set up the screen.
+	 *
+	 * @param string       $id           Option prefix.
+	 * @param string       $menu_title   Menu title.
+	 * @param string       $title        Screen title.
+	 * @param array        $fields       Fields.
+	 * @param array        $tabs         Tabs.
+	 * @param string       $parent_class Unused, kept for compatibility.
+	 * @param string|false $file         Screen slug.
+	 * @param string|false $role         Capability.
+	 */
+	public static function init( $id, $menu_title, $title, $fields, $tabs, $parent_class, $file = false, $role = false ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed -- Signature kept for compatibility.
+		self::$fields     = $fields;
+		self::$tabs       = $tabs;
+		self::$file       = $file ? $file : __FILE__;
+		self::$id         = $id . '_options';
+		self::$menu_title = $menu_title;
+		self::$title      = $title;
+		self::$role       = $role ? $role : self::$role;
 		self::build_settings();
-		// Register the options page only for admin users with the required capability.
 		if ( is_admin() && current_user_can( self::$role ) ) {
-			add_options_page( self::$title, self::$menu_title, self::$role, self::$file, array( 'HackRepair_Plugin_Archiver_Options', 'page' ) );
+			add_options_page( self::$title, self::$menu_title, self::$role, self::$file, array( __CLASS__, 'page' ) );
 		}
 	}
 
-	// Register our settings. Add the settings section, and settings fields
+	/**
+	 * Register the setting, its section and fields.
+	 */
 	public static function build_settings() {
-		register_setting( self::$id, self::$id, array( 'HackRepair_Plugin_Archiver_Options', 'validate' ) );
-		if ( is_array( self::$fields ) ) {
-			foreach ( self::$fields as $group_id => $group ) {
-						add_settings_section( $group_id, $group['title'], $group['callback'] ? is_array( $group['callback'] ) ? $group['callback'] : array( 'HackRepair_Plugin_Archiver_Options', $group['callback'] ) : '', self::$file );
-				if ( is_array( $group['options'] ) ) {
-					foreach ( $group['options'] as $option_id => $option ) {
-										$option['args']['option_id'] = $option_id;
-										$option['args']['title']     = $option['title'];
-										add_settings_field( $option_id, $option['title'], $option['callback'] ? is_array( $option['callback'] ) ? $option['callback'] : array( 'HackRepair_Plugin_Archiver_Options', $option['callback'] ) : '', self::$file, $group_id, $option['args'] );
-					}
-				}
+		register_setting( self::$id, self::$id, array( 'sanitize_callback' => array( __CLASS__, 'validate' ) ) );
+		foreach ( (array) self::$fields as $group_id => $group ) {
+			add_settings_section( $group_id, $group['title'], self::callback( $group['callback'] ), self::$file );
+			foreach ( (array) $group['options'] as $option_id => $option ) {
+				$option['args']['option_id'] = $option_id;
+				add_settings_field( $option_id, $option['title'], self::callback( $option['callback'] ), self::$file, $group_id, $option['args'] );
 			}
 		}
 	}
 
-	// ************************************************************************************************************
-	// Utilities
+	/**
+	 * Resolve a callback given as a method name of this class or a callable.
+	 *
+	 * @param mixed $callback Callback.
+	 * @return callable|string
+	 */
+	private static function callback( $callback ) {
+		if ( ! $callback ) {
+			return '';
+		}
+		return is_array( $callback ) ? $callback : array( __CLASS__, $callback );
+	}
+
+	/**
+	 * Whether an array has string keys.
+	 *
+	 * @param array $arr Array.
+	 * @return bool
+	 */
 	public static function is_assoc( $arr ) {
 		return array_keys( $arr ) !== range( 0, count( $arr ) - 1 );
 	}
 
-	// ************************************************************************************************************
+	/**
+	 * Field name attribute.
+	 *
+	 * @param array $args Field arguments.
+	 * @return string
+	 */
+	private static function name( $args ) {
+		return self::$id . '[' . $args['option_id'] . ']';
+	}
 
-	// Callback functions
+	/**
+	 * Field description below the control (simple markup allowed).
+	 *
+	 * @param array $args Field arguments.
+	 */
+	private static function description( $args ) {
+		if ( ! empty( $args['description'] ) ) {
+			echo '<p class="description">' . wp_kses_post( $args['description'] ) . '</p>';
+		}
+	}
 
-	// DROP-DOWN-BOX - Name: select - Argument : values: array()
+	/**
+	 * Drop-down. Arguments: values (list, or value => label).
+	 *
+	 * @param array $args Field arguments.
+	 */
 	public static function select( $args ) {
-		$items       = $args['values'];
-		$description = isset( $args['description'] ) ? "<p class=\"description\">{$args['description']}</p>" : '';
-		echo "<select id='" . self::$id . "_{$args['option_id']}' name='" . self::$id . "[{$args['option_id']}]'>";
-		if ( self::is_assoc( $items ) ) {
-			foreach ( $items as $key => $item ) {
-				$key      = esc_attr( $key );
-				$selected = selected( $key, HackRepair_Plugin_Archiver::$options[ $args['option_id'] ], false );
-				echo "<option value='{$key}' $selected>" . esc_html( $item ) . '</option>';
-			}
-		} else {
-			foreach ( $items as $item ) {
-				$key      = esc_attr( $item );
-				$selected = selected( $item, HackRepair_Plugin_Archiver::$options[ $args['option_id'] ], false );
-				echo "<option value='{$key}' $selected>$item</option>";
-			}
+		$items   = (array) $args['values'];
+		$current = isset( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) ? (string) HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] : '';
+		if ( ! self::is_assoc( $items ) ) {
+			$items = array_combine( $items, $items );
 		}
-		echo "</select>{$description}";
+		echo '<select id="' . esc_attr( self::$id . '_' . $args['option_id'] ) . '" name="' . esc_attr( self::name( $args ) ) . '">';
+		foreach ( $items as $key => $label ) {
+			echo '<option value="' . esc_attr( $key ) . '"' . selected( (string) $key, $current, false ) . '>' . esc_html( $label ) . '</option>';
+		}
+		echo '</select>';
+		self::description( $args );
 	}
 
-	// CHECKBOX - Name: checkbox
+	/**
+	 * Checkbox.
+	 *
+	 * @param array $args Field arguments.
+	 */
 	public static function checkbox( $args ) {
-		if ( ! isset( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) ) {
-			HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] = false;
-		}
-		$checked     = checked( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ], true, false );
-		$description = isset( $args['description'] ) ? "<p class=\"description\">{$args['description']}</p>" : '';
-		echo '<input ' . $checked . " id='{$args['option_id']}' name='" . self::$id . "[{$args['option_id']}]' type='checkbox' value=\"1\"/>{$description}";
+		$value = ! empty( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] );
+		echo '<input type="checkbox" value="1" id="' . esc_attr( $args['option_id'] ) . '" name="' . esc_attr( self::name( $args ) ) . '"' . checked( $value, true, false ) . '>';
+		self::description( $args );
 	}
 
-	// TEXTAREA - Name: textarea - Arguments: rows:int=4 cols:int=20
-	public static function textarea( $args ) {
-		if ( ! $args['rows'] ) {
-			$args['rows'] = 4;
-		}
-		if ( ! $args['cols'] ) {
-			$args['cols'] = 20;
-		}
-		echo "<textarea id='{$args['option_id']}' name='" . self::$id . "[{$args['option_id']}]' rows='{$args['rows']}' cols='{$args['cols']}' type='textarea'>" . HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] . '</textarea>';
-	}
-
-	// TEXTBOX - Name: text - Arguments: size:int=40
-	public static function text( $args ) {
-		if ( ! isset( $args['size'] ) ) {
-			$args['size'] = 40;
-		}
-		$description = isset( $args['description'] ) ? "<p class=\"description\">{$args['description']}</p>" : '';
-		echo "<input id='{$args['option_id']}' name='" . self::$id . "[{$args['option_id']}]' size='{$args['size']}' type='text' value='" . esc_attr( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) . "' />{$description}";
-	}
-
-	// TEXTBOX CUSTOM - Name: text_plugins - Arguments: size:int=40
+	/**
+	 * Text box for the label of a new archive.
+	 *
+	 * @param array $args Field arguments.
+	 */
 	public static function text_plugins( $args ) {
-		if ( ! isset( $args['size'] ) ) {
-			$args['size'] = 40;
-		}
-		$description = isset( $args['description'] ) ? "<p class=\"description\">{$args['description']}</p>" : '';
-		echo "<input id='{$args['option_id']}' name='" . self::$id . "[{$args['option_id']}]' size='{$args['size']}' type='text' value='" . esc_attr( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) . "' />{$description}";
+		$size  = isset( $args['size'] ) ? (int) $args['size'] : 40;
+		$value = isset( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) ? HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] : '';
+		echo '<input type="text" id="' . esc_attr( $args['option_id'] ) . '" name="' . esc_attr( self::name( $args ) ) . '" size="' . esc_attr( $size ) . '" value="' . esc_attr( $value ) . '">';
+		self::description( $args );
 	}
 
-	// NUMBER TEXTBOX - Name: text - Arguments: size:int=40
-	public static function number( $args ) {
-		$options = '';
-		if ( is_array( $args ) ) {
-			foreach ( $args as $key => $value ) {
-				if ( in_array( $key, array( 'option_id' ) ) ) {
-					continue;
-				}
-				$options .= " {$key}=\"{$value}\"";
-			}
-		}
-		echo "<input id='{$args['option_id']}' name='" . self::$id . "[{$args['option_id']}]' type='number' value='" . HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] . "'{$options}/>";
-	}
-
-	// PASSWORD-TEXTBOX - Name: password - Arguments: size:int=40
-	public static function password( $args ) {
-		if ( ! $args['size'] ) {
-			$args['size'] = 40;
-		}
-		echo "<input id='{$args['option_id']}' name='" . self::$id . "[{$args['option_id']}]' size='{$args['size']}' type='password' value='" . HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] . "' />";
-	}
-
-	// RADIO-BUTTON - Name: plugin_options[option_set1]
-	public static function radio( $args ) {
-		$items = $args['values'];
-		if ( self::is_assoc( $items ) ) {
-			foreach ( $items as $key => $item ) {
-				$checked = checked( $key, HackRepair_Plugin_Archiver::$options[ $args['option_id'] ], false );
-				echo '<label><input ' . $checked . " value='$key' name='" . self::$id . "[{$args['option_id']}]' type='radio' /> $item</label><br />";
-			}
-		} else {
-			foreach ( $items as $item ) {
-				$checked = checked( $item, HackRepair_Plugin_Archiver::$options[ $args['option_id'] ], false );
-				echo '<label><input ' . $checked . " value='$item' name='" . self::$id . "[{$args['option_id']}]' type='radio' /> $item</label><br />";
-			}
-		}
-	}
-	// checklist - Name: plugin_options[option_set1]
-	public static function checklist( $args ) {
-		$items = $args['values'];
-		if ( self::is_assoc( $items ) ) {
-			foreach ( $items as $key => $item ) {
-				if ( is_array( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) ) {
-					$checked = checked( in_array( $key, HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ), true, false );
-				} else {
-					$checked = checked( true, false, false );
-				}
-				echo '<label><input ' . $checked . " value='$key' name='" . self::$id . "[{$args['option_id']}][]' type='checkbox' /> $item</label><br />";
-			}
-		} else {
-			foreach ( $items as $item ) {
-				if ( is_array( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) ) {
-					$checked = checked( in_array( $item, HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ), true, false );
-				} else {
-					$checked = checked( true, false, false );
-				}
-				echo '<label><input ' . $checked . " value='$item' name='" . self::$id . "[{$args['option_id']}][]' type='checkbox' /> $item</label><br />";
-			}
-		}
-	}
-
+	/**
+	 * Tab navigation.
+	 *
+	 * @param string $current Current tab key.
+	 */
 	public static function tabs( $current = 'settings' ) {
-		$result = '';
-		if ( count( self::$tabs ) ) {
-			$result = "      <h2 class=\"nav-tab-wrapper\">\r\n";
-			foreach ( self::$tabs as $tab_key => $tab ) {
-				if ( $tab_key === $current ) {
-					$tab['class'] .= ' nav-tab-active';
-				}
-				$result .= "        <a class=\"nav-tab{$tab['class']}\" href=\"{$tab['href']}\">{$tab['title']}</a>\r\n";
-			}
-			$result .= "      </h2>\r\n";
+		if ( ! self::$tabs ) {
+			return;
 		}
-		return $result;
+		echo '<h2 class="nav-tab-wrapper">';
+		foreach ( self::$tabs as $tab_key => $tab ) {
+			$class = 'nav-tab' . ( $tab_key === $current ? ' nav-tab-active' : '' );
+			echo '<a class="' . esc_attr( $class ) . '" href="' . esc_url( $tab['href'] ) . '">' . esc_html( $tab['title'] ) . '</a>';
+		}
+		echo '</h2>';
 	}
+
+	/**
+	 * The Settings tab.
+	 */
 	public static function settings() {
-		?>
-		<form action="options.php" method="post">
-		<?php settings_fields( self::$id ); ?>
-		<?php do_settings_sections( self::$file ); ?>
-		<p class="submit">
-		<input name="submit" type="submit" class="button-primary" value="<?php esc_attr_e( 'Save Changes' ); ?>" />
-		</p>
-		</form>
-		<?php
+		echo '<form action="options.php" method="post">';
+		settings_fields( self::$id );
+		do_settings_sections( self::$file );
+		submit_button();
+		echo '</form>';
 	}
+
+	/**
+	 * Callback that renders a tab.
+	 *
+	 * @param string $current Tab key.
+	 * @return callable
+	 */
 	public static function content( $current ) {
-		$callback = array( 'HackRepair_Plugin_Archiver_Options', 'settings' );
 		if ( isset( self::$tabs[ $current ]['callback'] ) ) {
-			if ( is_callable( self::$tabs[ $current ]['callback'] ) ) {
-				$callback = self::$tabs[ $current ]['callback'];
-			} else {
-				$callback = array( 'HackRepair_Plugin_Archiver_Options', self::$tabs[ $current ]['callback'] );
-			}
+			$callback = self::$tabs[ $current ]['callback'];
+			return is_callable( $callback ) ? $callback : array( __CLASS__, $callback );
 		}
-		return $callback;
+		return array( __CLASS__, 'settings' );
 	}
-	// Display the admin options page
+
+	/**
+	 * The settings screen.
+	 */
 	public static function page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
-		?>
-	<div class="wrap">
-		<div class="icon32" id="icon-page"><br></div>
-		<h2><?php echo esc_html( self::$title ); ?></h2>
-		<?php
-		echo self::$description;
-		$default = array_keys( self::$tabs );
-		$default = array_shift( $default );
-		$current = isset( $_REQUEST['tab'] ) ? sanitize_key( wp_unslash( $_REQUEST['tab'] ) ) : $default;
+		$keys    = array_keys( self::$tabs );
+		$current = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab selection only.
+		if ( ! in_array( $current, $keys, true ) ) {
+			$current = (string) reset( $keys );
+		}
+		echo '<div class="wrap"><h1>' . esc_html( self::$title ) . '</h1>';
+		settings_errors( self::$id );
 		HackRepair_Plugin_Archiver_Security::render_notices( HackRepair_Plugin_Archiver::$options['archive_dir'] );
-		echo self::tabs( $current );
+		self::tabs( $current );
 		call_user_func( self::content( $current ) );
 		if ( 'settings' === $current ) {
 			HackRepair_Plugin_Archiver_Security::render_panel();
 		}
-		?>
-	</div>
-		<?php
+		echo '</div>';
 	}
 
-	// Validate user data for some/all of your input fields
+	/**
+	 * Clean the submitted settings. Only known keys are kept.
+	 *
+	 * @param mixed $input Submitted values.
+	 * @return array
+	 */
 	public static function validate( $input ) {
-		// Ensure only users with the manage_options capability may modify settings.
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return $input;
+		$saved = get_option( self::$id, array() );
+		$saved = is_array( $saved ) ? $saved : array();
+		if ( ! current_user_can( 'manage_options' ) || ! is_array( $input ) ) {
+			return $saved;
 		}
 
-		if ( isset( $input['archive_dir_add'] ) && $input['archive_dir_add'] ) {
-			$label = sanitize_text_field( $input['archive_dir_add'] );
-			if ( ! current_user_can( 'install_plugins' ) ) {
-				$created = false;
-			} else {
-				$created = HackRepair_Plugin_Archiver_Security::create_archive( $label );
-			}
-			if ( ! $created ) {
-				add_settings_error( 'hackrepair-plugin-archiver_options', 'archive_create_failed', __( 'The new archive could not be created. File changes may be disabled, or the server needs file credentials.', 'hackrepair-plugin-archiver' ), 'error' );
-			}
-			$input['archive_dir_add'] = '';
-			if ( isset( $input['archive_dir'] ) && ! HackRepair_Plugin_Archiver_Security::is_registered( sanitize_file_name( $input['archive_dir'] ) ) ) {
-				$input['archive_dir'] = HackRepair_Plugin_Archiver::$options['archive_dir'];
+		$output = array(
+			'archive_dir'     => isset( $saved['archive_dir'] ) ? (string) $saved['archive_dir'] : '',
+			'archive_dir_add' => '',
+			// An unchecked box is not submitted, so absence means off.
+			'deactivate'      => ! empty( $input['deactivate'] ),
+		);
+
+		if ( isset( $input['archive_dir'] ) ) {
+			$dir = sanitize_file_name( wp_unslash( $input['archive_dir'] ) );
+			if ( HackRepair_Plugin_Archiver_Security::is_registered( $dir ) ) {
+				$output['archive_dir'] = $dir;
 			}
 		}
-		return $input; // return validated input
+
+		if ( ! empty( $input['archive_dir_add'] ) ) {
+			$label   = sanitize_text_field( wp_unslash( $input['archive_dir_add'] ) );
+			$created = current_user_can( 'install_plugins' ) ? HackRepair_Plugin_Archiver_Security::create_archive( $label ) : false;
+			if ( ! $created ) {
+				add_settings_error( self::$id, 'archive_create_failed', __( 'The new archive could not be created. File changes may be disabled, or the server needs file credentials.', 'hackrepair-plugin-archiver' ), 'error' );
+			}
+		}
+		return $output;
 	}
 }

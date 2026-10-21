@@ -41,7 +41,7 @@ Current release: **3.3.0**. See [release notes](releases/v3.3.0.md).
 - **Random archive folder names.** New archives are named like `plugins-archive-k3x9a7q2m5zt`, so the location cannot be guessed. Archives made by earlier versions are found automatically and kept as they are; **Secure this archive** renames one to a random name.
 - **Blocked from the web.** Every archive folder gets deny rules for Apache (`.htaccess`, 2.2 and 2.4), IIS (`web.config`) and an `index.php`. The plugin requests a small marker file from your own site to confirm the rules work, warns you on screen if the folder can be read, and adds a **Site Health** test. On nginx, add `location ^~ /wp-content/<folder> { deny all; }` (the warning shows the exact line).
 - **`DISALLOW_FILE_MODS` respected.** When a site turns off file changes, the Archive links, bulk actions and restore/delete buttons are hidden. The Archived Plugins list stays visible, read-only, and Download still works.
-- **Nothing is overwritten.** Archiving or restoring is skipped if a plugin with the same folder name is already at the destination.
+- **Nothing is overwritten.** Archiving or restoring is skipped if a plugin with the same folder name is already at the destination, and a notice says which and why.
 
 Archiving moves files only. A plugin's saved settings and data stay where they were, so a restored plugin comes back configured.
 

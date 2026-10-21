@@ -34,7 +34,8 @@ HackRepair_Plugin_Archiver_Download::init();
 add_action( 'init', array( 'HackRepair_Plugin_Archiver', 'init' ) );
 
 class HackRepair_Plugin_Archiver {
-	public static $count = 0;
+	public static $count          = 0;
+	public static $skipped        = 0;
 	public static $active_archive = '';
 	public static $plugin_dir;
 	public static $options = array(
@@ -47,7 +48,7 @@ class HackRepair_Plugin_Archiver {
 		self::$plugin_dir = plugin_dir_path( __FILE__ );
 		$options          = get_option( 'hackrepair-plugin-archiver_options' );
 		self::$options    = wp_parse_args( $options, self::$options );
-		self::$options = HackRepair_Plugin_Archiver_Security::maybe_migrate( self::$options );
+		self::$options    = HackRepair_Plugin_Archiver_Security::maybe_migrate( self::$options );
 		if ( '' === self::$options['archive_dir'] ) {
 			// Nothing could be created (for example DISALLOW_FILE_MODS); read-only fallback.
 			self::$options['archive_dir'] = HackRepair_Plugin_Archiver_Security::legacy_default_name();
@@ -62,7 +63,8 @@ class HackRepair_Plugin_Archiver {
 				array(
 					'action_name'  => 'archive-selected',
 					'menu_text'    => __( 'Archive', 'hackrepair-plugin-archiver' ),
-					'admin_notice' => _n_noop( 'Plugin archived successfully', '%d plugins archived successfully', 'hackrepair-plugin-archiver' ),
+					/* translators: %d: number of plugins. */
+					'admin_notice' => _n_noop( '%d plugin archived successfully', '%d plugins archived successfully', 'hackrepair-plugin-archiver' ),
 					'callback'     => array( 'HackRepair_Plugin_Archiver', 'bulk_archive' ),
 				)
 			);
@@ -209,11 +211,11 @@ class HackRepair_Plugin_Archiver {
 		if ( ! class_exists( 'WP_List_Table' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 		}
-		if ( ! class_exists( 'WP_Plugins_Archive_List_Table' ) ) {
+		if ( ! class_exists( 'HackRepair_Plugin_Archiver_List_Table' ) ) {
 			require_once self::$plugin_dir . 'includes/list.php';
 		}
 
-		$list_table = new WP_Plugins_Archive_List_Table();
+		$list_table = new HackRepair_Plugin_Archiver_List_Table();
 		$list_table->prepare_items();
 
 		echo '<div class="hrgpa-archive-tab">';
@@ -227,12 +229,11 @@ class HackRepair_Plugin_Archiver {
 
 	public static function plugin_views( $views ) {
 		// Validate page parameter
-		$page = isset( $_REQUEST['page'] ) ? sanitize_key( $_REQUEST['page'] ) : '';
-		if ( 'hackrepair-plugin-archiver' === $page ) {
+		$page = isset( $_REQUEST['page'] ) ? sanitize_key( wp_unslash( $_REQUEST['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Screen detection only.
+		if ( 'hackrepair-plugin-archiver' === $page || ! HackRepair_Plugin_Archiver_Security::can_view() ) {
 			return $views;
 		}
-		$plugins = self::get_archived_plugins();
-		$count   = count( $plugins );
+		$count = self::archived_count( HackRepair_Plugin_Archiver_Security::active_name( self::$options['archive_dir'] ) );
 		if ( 0 < $count ) {
 			$link              = admin_url( 'plugins.php?page=hackrepair-plugin-archiver' );
 			$title             = __( 'Archived', 'hackrepair-plugin-archiver' );
@@ -287,7 +288,7 @@ class HackRepair_Plugin_Archiver {
 		if ( ! class_exists( 'WP_List_Table' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 		}
-		if ( ! class_exists( 'WP_Plugins_Archive_List_Table' ) ) {
+		if ( ! class_exists( 'HackRepair_Plugin_Archiver_List_Table' ) ) {
 			require_once self::$plugin_dir . 'includes/list.php';
 		}
 
@@ -315,7 +316,7 @@ class HackRepair_Plugin_Archiver {
 			),
 		);
 
-		$list_table = new WP_Plugins_Archive_List_Table();
+		$list_table = new HackRepair_Plugin_Archiver_List_Table();
 		$list_table->prepare_items();
 		?>
 		<div class="wrap">
@@ -332,128 +333,107 @@ class HackRepair_Plugin_Archiver {
 	}
 
 
+	/**
+	 * Plugins in an archive folder, keyed by plugin file ("folder/main.php" or "single.php").
+	 *
+	 * @param string $plugin_root Absolute folder path; empty for the active archive.
+	 * @return array Plugin file => plugin header data.
+	 */
 	public static function get_archived_plugins( $plugin_root = '' ) {
-			$wp_plugins = array();
-		if ( empty( $plugin_root ) ) {
-				// Sanitize the archive directory name
-				$archive_dir = sanitize_file_name( self::$options['archive_dir'] );
-				$plugin_root = WP_CONTENT_DIR . '/' . $archive_dir;
-		} else {
-					// Validate that plugin_root is within WP_CONTENT_DIR
-					$real_plugin_root = realpath( $plugin_root );
-					$real_content_dir = realpath( WP_CONTENT_DIR );
-			if ( false === $real_plugin_root || false === $real_content_dir || strpos( $real_plugin_root, $real_content_dir ) !== 0 ) {
-						// If plugin_root is outside WP_CONTENT_DIR, use default
-						$archive_dir = sanitize_file_name( self::$options['archive_dir'] );
-						$plugin_root = WP_CONTENT_DIR . '/' . $archive_dir;
-			} else {
-				$plugin_root = $real_plugin_root;
-			}
+		$wp_plugins  = array();
+		$content_dir = realpath( WP_CONTENT_DIR );
+		$default     = WP_CONTENT_DIR . '/' . sanitize_file_name( self::$options['archive_dir'] );
+		$root        = realpath( '' === (string) $plugin_root ? $default : $plugin_root );
+		// A path outside wp-content falls back to the active archive.
+		if ( false === $root || false === $content_dir || ! self::path_inside( $root, $content_dir ) ) {
+			$root = realpath( $default );
 		}
-
-		// Debug: log chosen archive root
-				// Ensure plugin_root is a valid directory
-		if ( ! is_dir( $plugin_root ) ) {
-				return $wp_plugins;
-		}
-
-				// Files in wp-content/plugins directory
-				$plugins_dir  = @ opendir( $plugin_root );
-				$plugin_files = array();
-		if ( $plugins_dir ) {
-			while ( ( $file = readdir( $plugins_dir ) ) !== false ) {
-					// Skip hidden files
-				if ( substr( $file, 0, 1 ) == '.' ) {
-							continue;
-				}
-					// Sanitize file name
-					$file = sanitize_file_name( $file );
-					// Validate file name
-				if ( ! preg_match( '/^[a-zA-Z0-9\-_\.]+$/', $file ) ) {
-								continue;
-				}
-								$full_path = $plugin_root . '/' . $file;
-								// Ensure full_path is within plugin_root
-								$real_path = realpath( $full_path );
-				if ( ! $real_path || strpos( $real_path, $plugin_root ) !== 0 ) {
-						continue;
-				}
-				if ( is_dir( $full_path ) ) {
-						$plugins_subdir = @ opendir( $full_path );
-					if ( $plugins_subdir ) {
-						while ( ( $subfile = readdir( $plugins_subdir ) ) !== false ) {
-							// Skip hidden files
-							if ( substr( $subfile, 0, 1 ) == '.' ) {
-												continue;
-							}
-							// Sanitize subfile name
-							$subfile = sanitize_file_name( $subfile );
-							// Validate subfile name
-							if ( ! preg_match( '/^[a-zA-Z0-9\-_\.]+$/', $subfile ) ) {
-										continue;
-							}
-								$sub_full_path = $full_path . '/' . $subfile;
-								// Ensure sub_full_path is within full_path
-								$sub_real_path = realpath( $sub_full_path );
-							if ( ! $sub_real_path || strpos( $sub_real_path, $plugin_root ) !== 0 ) {
-													continue;
-							}
-							if ( substr( $subfile, -4 ) == '.php' ) {
-														$plugin_files[] = "$file/$subfile";
-							}
-						}
-									closedir( $plugins_subdir );
-					}
-				} else {
-								// Sanitize file name
-								$file = sanitize_file_name( $file );
-								// Validate file name
-					if ( ! preg_match( '/^[a-zA-Z0-9\-_\.]+$/', $file ) ) {
-								continue;
-					}
-					if ( substr( $file, -4 ) == '.php' ) {
-									$plugin_files[] = $file;
-					}
-				}
-			}
-				closedir( $plugins_dir );
-		}
-
-		if ( empty( $plugin_files ) ) {
+		if ( false === $root || false === $content_dir || ! self::path_inside( $root, $content_dir ) || ! is_dir( $root ) ) {
 			return $wp_plugins;
 		}
 
-		foreach ( $plugin_files as $plugin_file ) {
-				// Allow typical plugin file paths like "dir/file.php" or single-file plugins "file.php"
-				$plugin_file = wp_normalize_path( $plugin_file );
-			if ( ! preg_match( '/^[A-Za-z0-9._\\/-]+$/', $plugin_file ) || strpos( $plugin_file, '..' ) !== false ) {
+		$entries = scandir( $root );
+		if ( false === $entries ) {
+			return $wp_plugins;
+		}
+		$plugin_files = array();
+		foreach ( $entries as $file ) {
+			if ( '.' === substr( $file, 0, 1 ) || ! preg_match( '/^[A-Za-z0-9._-]+$/', $file ) ) {
 				continue;
 			}
-				$full_plugin_path = "$plugin_root/$plugin_file";
-				// Ensure full_plugin_path is within plugin_root
-				$real_plugin_path = realpath( $full_plugin_path );
-			if ( ! $real_plugin_path || strpos( $real_plugin_path, $plugin_root ) !== 0 ) {
-					continue;
+			$path = $root . '/' . $file;
+			$real = realpath( $path );
+			if ( false === $real || ! self::path_inside( $real, $root ) ) {
+				continue; // Skips links that point outside the archive.
 			}
-			if ( ! is_readable( $full_plugin_path ) ) {
+			if ( is_dir( $path ) ) {
+				$sub_entries = scandir( $path );
+				foreach ( false === $sub_entries ? array() : $sub_entries as $subfile ) {
+					if ( '.' === substr( $subfile, 0, 1 ) || '.php' !== substr( $subfile, -4 ) || ! preg_match( '/^[A-Za-z0-9._-]+$/', $subfile ) ) {
 						continue;
+					}
+					$sub_real = realpath( $path . '/' . $subfile );
+					if ( false !== $sub_real && self::path_inside( $sub_real, $root ) ) {
+						$plugin_files[] = $file . '/' . $subfile;
+					}
+				}
+			} elseif ( '.php' === substr( $file, -4 ) ) {
+				$plugin_files[] = $file;
 			}
-
-				$plugin_data = get_plugin_data( $full_plugin_path, false, false ); // Do not apply markup/translate as it'll be cached.
-
-			if ( empty( $plugin_data['Name'] ) ) {
-							continue;
-			}
-
-							$wp_plugins[ plugin_basename( $plugin_file ) ] = $plugin_data;
 		}
-				uasort( $wp_plugins, '_sort_uname_callback' );
 
-				// $cache_plugins[ $plugin_folder ] = $wp_plugins;
-				// wp_cache_set('plugins', $cache_plugins, 'plugins');
-
-				return $wp_plugins;
+		foreach ( $plugin_files as $plugin_file ) {
+			$full = $root . '/' . $plugin_file;
+			if ( ! is_readable( $full ) ) {
+				continue;
+			}
+			$plugin_data = get_plugin_data( $full, false, false );
+			if ( ! empty( $plugin_data['Name'] ) ) {
+				$wp_plugins[ $plugin_file ] = $plugin_data;
+			}
+		}
+		uasort( $wp_plugins, '_sort_uname_callback' );
+		return $wp_plugins;
 	}
+
+	/**
+	 * Whether a real path is inside a real folder.
+	 *
+	 * @param string $path Real path.
+	 * @param string $root Real folder path.
+	 * @return bool
+	 */
+	private static function path_inside( $path, $root ) {
+		$path = wp_normalize_path( $path );
+		$root = untrailingslashit( wp_normalize_path( $root ) );
+		return 0 === strpos( $path . '/', $root . '/' );
+	}
+
+	/**
+	 * Number of plugins in an archive, cached for ten minutes.
+	 *
+	 * @param string $dir Archive folder name.
+	 * @return int
+	 */
+	public static function archived_count( $dir ) {
+		$key   = 'hrpa_count_' . md5( (string) $dir );
+		$count = get_transient( $key );
+		if ( false === $count ) {
+			$count = count( self::get_archived_plugins( WP_CONTENT_DIR . '/' . $dir ) );
+			set_transient( $key, $count, 10 * MINUTE_IN_SECONDS );
+		}
+		return (int) $count;
+	}
+
+	/**
+	 * Forget cached archive counts after anything moves.
+	 */
+	public static function flush_counts() {
+		foreach ( array_keys( self::get_archive_dirs() ) as $dir ) {
+			delete_transient( 'hrpa_count_' . md5( (string) $dir ) );
+		}
+	}
+
 	public static function archive_actions() {
 			// Verify nonce for security
 			// Check user capabilities
@@ -462,8 +442,8 @@ class HackRepair_Plugin_Archiver {
 		}
 
 		if ( isset( $_REQUEST['action'] ) && isset( $_REQUEST['_wpnonce'] ) ) {
-			if ( ! wp_verify_nonce( $_REQUEST['_wpnonce'], 'bulk-plugins' ) ) {
-				wp_die( __( 'Security check failed', 'hackrepair-plugin-archiver' ) );
+			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'bulk-plugins' ) ) {
+				wp_die( esc_html__( 'Security check failed', 'hackrepair-plugin-archiver' ) );
 			}
 			if ( ! current_user_can( 'install_plugins' ) ) {
 				wp_die( esc_html__( 'You do not have sufficient permissions to change archived plugins.', 'hackrepair-plugin-archiver' ) );
@@ -473,7 +453,7 @@ class HackRepair_Plugin_Archiver {
 			// Validate action parameter
 			$action = sanitize_key( $_REQUEST['action'] );
 			if ( ! in_array( $action, array( 'restore-selected', 'remove-selected' ), true ) ) {
-				wp_die( __( 'Invalid action', 'hackrepair-plugin-archiver' ) );
+				wp_die( esc_html__( 'Invalid action', 'hackrepair-plugin-archiver' ) );
 			}
 
 			switch ( $action ) {
@@ -483,7 +463,7 @@ class HackRepair_Plugin_Archiver {
 						include ABSPATH . 'wp-admin/admin-footer.php';
 						die();
 					} else {
-						wp_safe_redirect( admin_url( 'plugins.php?page=hackrepair-plugin-archiver&success_action=restore-selected&count=' . self::$count ) );
+						wp_safe_redirect( admin_url( 'plugins.php?page=hackrepair-plugin-archiver&success_action=restore-selected&count=' . self::$count . '&skipped=' . self::$skipped ) );
 						exit;
 					}
 					break;
@@ -500,24 +480,28 @@ class HackRepair_Plugin_Archiver {
 			}
 		}
 	}
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Notices only read the result shown after a verified action.
 	public static function admin_notice() {
 		global $pagenow;
-		if ( $pagenow === 'plugins.php' ) {
+		if ( 'plugins.php' === $pagenow ) {
 			// Validate success_action parameter
 			$success_action = isset( $_REQUEST['success_action'] ) ? sanitize_key( $_REQUEST['success_action'] ) : '';
 			if ( 'restore-selected' === $success_action ) {
 				// Print notice in admin bar
-				$message = _n_noop( 'Plugin restored successfully', '%d plugins restored successfully', 'hackrepair-plugin-archiver' );
+				/* translators: %d: number of plugins. */
+				$message = _n_noop( '%d plugin restored successfully', '%d plugins restored successfully', 'hackrepair-plugin-archiver' );
 				if ( ! empty( $message ) ) {
 					// Validate count parameter
 					$count          = isset( $_REQUEST['count'] ) ? intval( $_REQUEST['count'] ) : 0;
 					$nooped_message = sprintf( translate_nooped_plural( $message, $count, 'hackrepair-plugin-archiver' ), $count );
 					echo '<div class="updated"><p>' . esc_html( $nooped_message ) . '</p></div>';
 				}
+				self::skipped_notice( 'restore' );
 			}
 			if ( 'remove-selected' === $success_action ) {
 				// Print notice in admin bar
-				$message = _n_noop( 'Plugin deleted successfully', '%d plugins deleted successfully', 'hackrepair-plugin-archiver' );
+				/* translators: %d: number of plugins. */
+				$message = _n_noop( '%d plugin deleted successfully', '%d plugins deleted successfully', 'hackrepair-plugin-archiver' );
 				if ( ! empty( $message ) ) {
 					// Validate count parameter
 					$count          = isset( $_REQUEST['count'] ) ? intval( $_REQUEST['count'] ) : 0;
@@ -527,16 +511,37 @@ class HackRepair_Plugin_Archiver {
 			}
 		}
 	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+	/**
+	 * Explain plugins that were left where they were because the destination already had one.
+	 *
+	 * @param string $what archive or restore.
+	 */
+	public static function skipped_notice( $what ) {
+		$skipped = isset( $_REQUEST['skipped'] ) ? absint( $_REQUEST['skipped'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display only.
+		if ( ! $skipped ) {
+			return;
+		}
+		if ( 'restore' === $what ) {
+			/* translators: %d: number of plugins. */
+			$text = _n( '%d plugin was not restored because a plugin with the same folder name is already installed. Delete or rename the installed copy first.', '%d plugins were not restored because plugins with the same folder names are already installed. Delete or rename the installed copies first.', $skipped, 'hackrepair-plugin-archiver' );
+		} else {
+			/* translators: %d: number of plugins. */
+			$text = _n( '%d plugin was not archived because the archive already holds a plugin with the same folder name. It was left in place.', '%d plugins were not archived because the archive already holds plugins with the same folder names. They were left in place.', $skipped, 'hackrepair-plugin-archiver' );
+		}
+		echo '<div class="notice notice-warning"><p>' . esc_html( sprintf( $text, $skipped ) ) . '</p></div>';
+	}
 
 	// action link filter
 	public static function action_link( $actions, $plugin_file, $plugin_data, $context ) {
 		$exclude_context = array( 'mustuse', 'dropins' );
-		$page            = isset( $_REQUEST['page'] ) ? sanitize_key( wp_unslash( $_REQUEST['page'] ) ) : '';
+		$page            = isset( $_REQUEST['page'] ) ? sanitize_key( wp_unslash( $_REQUEST['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Screen detection only.
 		$this_plugin     = plugin_basename( __FILE__ );
 
 		if ( ! in_array( $context, $exclude_context, true ) && ( $plugin_file !== $this_plugin ) && ( 'hackrepair-plugin-archiver' !== $page ) ) {
 			if ( current_user_can( 'install_plugins' ) && HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
-				$actions['archive'] = '<a href="' . esc_url( wp_nonce_url( 'plugins.php?action=archive-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ), 'bulk-plugins' ) ) . '" aria-label="' . esc_attr( sprintf( __( 'Archive %s', 'hackrepair-plugin-archiver' ), esc_html( $plugin_data['Name'] ) ) ) . '">' . esc_html__( 'Archive', 'hackrepair-plugin-archiver' ) . '</a>';
+				$actions['archive'] = '<a href="' . esc_url( wp_nonce_url( 'plugins.php?action=archive-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ), 'bulk-plugins' ) ) . '" aria-label="' . esc_attr( sprintf( /* translators: %s: plugin name. */ __( 'Archive %s', 'hackrepair-plugin-archiver' ), wp_strip_all_tags( $plugin_data['Name'] ) ) ) . '">' . esc_html__( 'Archive', 'hackrepair-plugin-archiver' ) . '</a>';
 			}
 		} elseif ( $plugin_file === $this_plugin && 'hackrepair-plugin-archiver' !== $page ) {
 			if ( current_user_can( 'install_plugins' ) && HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
@@ -557,10 +562,11 @@ class HackRepair_Plugin_Archiver {
 	}
 
 		// bulk actions
-	public static function bulk_remove( $checked = false ) {
+	// phpcs:disable WordPress.Security.NonceVerification -- The bulk-plugins nonce is verified by the caller: archive_actions() or the Plugins-screen bulk handler.
+	public static function bulk_remove( $checked = false ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Signature shared with the bulk handler.
 		// Check user capabilities
 		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
 		self::require_file_mods();
 
@@ -577,7 +583,7 @@ class HackRepair_Plugin_Archiver {
 			WP_Filesystem( $creds );
 			// Sanitize archive directory
 			$archive_dir = self::prepare_archive_dir();
-			$count = 0;
+			$count       = 0;
 			// Validate that checked is an array
 			$checked_plugins = isset( $_REQUEST['checked'] ) && is_array( $_REQUEST['checked'] ) ? $_REQUEST['checked'] : array();
 			foreach ( $checked_plugins as $plugin ) {
@@ -600,21 +606,21 @@ class HackRepair_Plugin_Archiver {
 				}
 			}
 			self::$count = $count;
+			self::flush_counts();
 			return true;
 		} else {
 			require_once ABSPATH . 'wp-admin/admin.php';
 			require_once ABSPATH . 'wp-admin/admin-header.php';
 			echo '<div class="wrap">';
-			echo $output;
+			echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core request_filesystem_credentials() form.
 			echo '</div>';
-			// include(ABSPATH . 'wp-admin/admin-footer.php');
 			return false;
 		}
 	}
-	public static function bulk_restore( $checked = false ) {
+	public static function bulk_restore( $checked = false ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Signature shared with the bulk handler.
 		// Check user capabilities
 		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
 		self::require_file_mods();
 
@@ -631,7 +637,7 @@ class HackRepair_Plugin_Archiver {
 			WP_Filesystem( $creds );
 			// Sanitize archive directory
 			$archive_dir = self::prepare_archive_dir();
-			$count = 0;
+			$count       = 0;
 			if ( isset( $_REQUEST['all'] ) && $_REQUEST['all'] ) {
 				$plugins  = self::get_archived_plugins();
 				$checked  = array_keys( $plugins );
@@ -646,7 +652,6 @@ class HackRepair_Plugin_Archiver {
 				if ( ! preg_match( '/^[a-zA-Z0-9\-_\.\/]+$/', $plugin ) || strpos( $plugin, '..' ) !== false ) {
 					continue;
 				}
-				// if ( isset( $plugins[$plugin] ) ) {
 					$plugin_dir = self::plugin_basename( $plugin, $archive_dir );
 					$target_dir = self::plugin_basename( $plugin, WP_PLUGIN_DIR );
 					// Validate paths are within expected directories (target may not exist yet)
@@ -662,39 +667,37 @@ class HackRepair_Plugin_Archiver {
 				if ( strpos( $norm_target_dir, $norm_wp_plugin_dir ) !== 0 ) {
 					continue;
 				}
-					if ( $wp_filesystem->exists( $target_dir ) ) {
-						continue; // Never overwrite a plugin that is already installed.
-					}
+				if ( $wp_filesystem->exists( $target_dir ) ) {
+					++self::$skipped; // Never overwrite a plugin that is already installed.
+					continue;
+				}
 					$result = $wp_filesystem->move( $plugin_dir, $target_dir );
 				if ( $result ) {
 					++$count;
 					HackRepair_Plugin_Archiver_Records::record_leave( 'restore', self::$active_archive, $plugin );
 				}
-				// }
 			}
 			self::$count = $count;
+			self::flush_counts();
 			return true;
 		} else {
 			require_once ABSPATH . 'wp-admin/admin.php';
 			require_once ABSPATH . 'wp-admin/admin-header.php';
 			echo '<div class="wrap">';
-			echo $output;
+			echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core request_filesystem_credentials() form.
 			echo '</div>';
-			// include(ABSPATH . 'wp-admin/admin-footer.php');
 			return false;
 		}
 	}
 	public static function bulk_archive( $checked ) {
 		// Check user capabilities
 		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
 		self::require_file_mods();
 
 		global $wp_filesystem;
 		$plugins = get_plugins();
-
-		// Debug: capture raw incoming selection and plugin count.
 
 		$form_fields = $_REQUEST;
 		$url         = add_query_arg( $form_fields, admin_url( 'plugins.php' ) );
@@ -706,7 +709,7 @@ class HackRepair_Plugin_Archiver {
 			WP_Filesystem( $creds );
 			// Sanitize archive directory
 			$archive_dir = self::prepare_archive_dir();
-			$count = 0;
+			$count       = 0;
 			// Validate that checked is an array
 			$checked_plugins = is_array( $checked ) ? $checked : ( isset( $_REQUEST['checked'] ) && is_array( $_REQUEST['checked'] ) ? wp_unslash( $_REQUEST['checked'] ) : array() );
 			foreach ( $checked_plugins as $plugin ) {
@@ -735,7 +738,8 @@ class HackRepair_Plugin_Archiver {
 						continue;
 					}
 					if ( $wp_filesystem->exists( $target_dir ) ) {
-						continue; // Never overwrite a plugin that is already in the archive.
+						++self::$skipped; // Never overwrite a plugin that is already in the archive.
+						continue;
 					}
 					if ( self::$options['deactivate'] ) {
 						deactivate_plugins( $plugin );
@@ -748,17 +752,20 @@ class HackRepair_Plugin_Archiver {
 				}
 			}
 			self::$count = $count;
+			self::flush_counts();
 		} else {
 			unset( $_REQUEST['success_action'] );
 			require_once ABSPATH . 'wp-admin/admin.php';
 			require_once ABSPATH . 'wp-admin/admin-header.php';
 			echo '<div class="wrap">';
-			echo $output;
+			echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core request_filesystem_credentials() form.
 			echo '</div>';
 			include ABSPATH . 'wp-admin/admin-footer.php';
 			die( '' );
 		}
 	}
+
+	// phpcs:enable WordPress.Security.NonceVerification
 
 	// utility functions
 
@@ -819,9 +826,4 @@ if ( is_admin() ) {
 	if ( ! class_exists( 'HackRepair_Plugin_Archiver_Bulk_Action' ) ) {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/bulk.php';
 	}
-
-	if ( ! class_exists( 'WP_List_Table' ) ) {
-		require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
-	}
-	require_once plugin_dir_path( __FILE__ ) . 'includes/list.php';
 }

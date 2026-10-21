@@ -23,7 +23,7 @@ Distributed by **WordPress.org**, not GitHub releases. This differs from the Git
 
 - `hackrepair-plugin-archiver.php`: plugin header and `HackRepair_Plugin_Archiver` (static). Archive, restore and delete actions (`bulk_archive`, `bulk_restore`, `bulk_remove`), the Plugins-screen Archive link, the Archived Plugins page, admin notices, Settings link.
 - `includes/bulk.php`: `HackRepair_Plugin_Archiver_Bulk_Action`, bulk action registration and handling on the Plugins screen.
-- `includes/list.php`: `WP_Plugins_Archive_List_Table`, the Archived Plugins table.
+- `includes/list.php`: `HackRepair_Plugin_Archiver_List_Table` (renamed from `WP_Plugins_Archive_List_Table` in 3.3.0), the Archived Plugins table.
 - `includes/options.php`: `HackRepair_Plugin_Archiver_Options`, Settings > Plugin Archiver and archive-folder management.
 - `includes/security.php`: `HackRepair_Plugin_Archiver_Security`, archive naming, the registry of archives, legacy migration, protection files, the cached reachability check, the Site Health test, the Secure and Check-again admin-post handlers, and the settings panel and notices.
 - `includes/records.php`: `HackRepair_Plugin_Archiver_Records`, the archived-on manifest and the capped activity log (Log tab, CSV export, clear).
@@ -37,7 +37,10 @@ Distributed by **WordPress.org**, not GitHub releases. This differs from the Git
 ## Design rules
 
 - Capabilities: viewing the archive, the archive screens and Download need `activate_plugins` (`manage_network_plugins` on multisite, where archive folders are shared), via `HackRepair_Plugin_Archiver_Security::can_view()`. Archive, restore, delete and Secure need `install_plugins` plus `wp_is_file_mod_allowed()`. Do not gate viewing on `install_plugins`: WordPress removes it from everyone when `DISALLOW_FILE_MODS` is set. Settings, the log and its export/clear need `manage_options`. Every action also needs a nonce. Plugin and archive paths are validated and must stay inside their own folders. Moves use the WordPress Filesystem API.
-- Nothing is overwritten: a move to an existing destination is refused.
+- Nothing is overwritten: a move to an existing destination is refused, counted as skipped and explained in a notice.
+- Switching the active archive from the list screen needs a nonce (`_hrpa_switch`).
+- The Plugins-screen archive count is cached per archive for ten minutes (`hrpa_count_<md5>`) and cleared after every archive, restore and delete.
+- Settings validation keeps only known keys, accepts only registered archives, and saves an unchecked Auto-deactivate box as off.
 - No outside requests (the only request is to the site's own archive marker file), no scheduled jobs, no tracking.
 - Archive folder names are `plugins-archive-<12 random chars>` or `plugins-archive-<label>-<8 random chars>`. Only folders in the registry can be selected. Protection files are rewritten before archive/restore. Renaming a legacy folder (Secure this archive) needs direct filesystem access.
 - Download needs `can_view()` and a nonce tied to archive and plugin; the archive must be in the registry; the path must resolve inside the archive; symbolic links are skipped; the zip is built in a temporary file that is deleted after sending; the size cap is filterable (`hackrepair_plugin_archiver_download_max_bytes`). The log and its export/clear need `manage_options`; CSV cells that start with `=`, `+`, `-`, `@` or a tab are prefixed with an apostrophe.
@@ -60,7 +63,7 @@ Run the shared PHPCS installation before committing PHP changes:
 /Volumes/BACKUP8TB2/plugins/PHPCS/run-phpcs.sh "$PWD"
 ```
 
-`phpcs.xml.dist` checks against WordPress-Extra and PHPCompatibilityWP for PHP 7.4 and newer. The legacy files still carry style findings (about 119 errors at the start of the 3.1.2 work, mostly output escaping, nonce warnings and comment style). New code must be clean; legacy findings are cleaned up as files are reworked.
+`phpcs.xml.dist` checks against WordPress-Extra and PHPCompatibilityWP for PHP 7.4 and newer. As of the 3.3.0 review every PHP file passes with zero findings. The few exceptions are marked in place with a reason: the list table deliberately shares core's list-table globals and fires core's plugin-row hooks, and the bulk handlers rely on a nonce verified by their caller. Keep it at zero.
 
 ## Releasing (WordPress.org SVN)
 
@@ -92,9 +95,7 @@ None bundled.
 
 ## Limits and open work
 
-- Style debt in the legacy files (see Tests and tooling).
-- `generate_tabs()` is declared inside a method in the main class and would fatal if the page rendered twice (fixed in 3.2.0).
-- Archived plugins are located by scanning folders whose name starts with `plugins-`, which can pick up unrelated folders (replaced by a registered list in 3.2.0).
-- Multisite behavior and cross-version compatibility need dedicated tests.
+- Multisite: archive screens and Download need a network administrator; uninstall cleans every site. Not yet tested on a real network.
+- Not yet tested: Secure this archive (rename), nginx, multisite.
 - No translations are shipped yet (`languages/` has only the index file).
 - Old SVN tags 3.0.1, 3.0.2 and 3.1.0 were never created.

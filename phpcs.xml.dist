@@ -36,6 +36,7 @@
 	</rule>
 	<rule ref="WordPress.Files.FileName.InvalidClassFileName">
 		<exclude-pattern>*/includes/*</exclude-pattern>
+		<exclude-pattern>*/hackrepair-plugin-archiver.php</exclude-pattern>
 	</rule>
 	<rule ref="PHPCompatibilityWP"/>
 </ruleset>
