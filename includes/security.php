@@ -1,5 +1,4 @@
 <?php
-// phpcs:disable WordPress.Files.FileName.InvalidClassFileName -- Matches the existing includes/ naming.
 /**
  * Archive folder naming, registration and web-access protection.
  *
@@ -636,7 +635,28 @@ class HackRepair_Plugin_Archiver_Security {
 		}
 		self::protect( self::fs_path( $new_name ) );
 		delete_transient( 'hrpa_reach_' . md5( $dir ) );
+		self::move_manifest( $dir, $new_name );
+		HackRepair_Plugin_Archiver_Records::log( 'secure', $new_name, '', '', $dir );
 		return 'secured';
+	}
+
+	/**
+	 * Carry the archived-on dates over to a renamed archive.
+	 *
+	 * @param string $from Old folder name.
+	 * @param string $to   New folder name.
+	 */
+	private static function move_manifest( $from, $to ) {
+		$manifest = HackRepair_Plugin_Archiver_Records::manifest();
+		$moved    = array();
+		foreach ( $manifest as $key => $entry ) {
+			if ( 0 === strpos( $key, $from . '|' ) ) {
+				$moved[ $to . substr( $key, strlen( $from ) ) ] = $entry;
+			} else {
+				$moved[ $key ] = $entry;
+			}
+		}
+		update_option( HackRepair_Plugin_Archiver_Records::MANIFEST_OPTION, $moved, false );
 	}
 
 	/**

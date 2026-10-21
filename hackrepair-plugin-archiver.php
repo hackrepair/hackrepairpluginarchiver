@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Plugin Name:       The Hack Repair Guy's Plugin Archiver
  * Plugin URI:        https://wordpress.org/plugins/hackrepair-plugin-archiver/
  * Description:       Quickly deactivate and archive a plugin for later use. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
- * Version:           3.2.0
+ * Version:           3.3.0
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Author:            Jim Walker, The Hack Repair Guy
@@ -25,12 +25,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
 require_once plugin_dir_path( __FILE__ ) . 'includes/security.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/records.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/download.php';
 HackRepair_Plugin_Archiver_Security::init();
+HackRepair_Plugin_Archiver_Records::init();
+HackRepair_Plugin_Archiver_Download::init();
 
 add_action( 'init', array( 'HackRepair_Plugin_Archiver', 'init' ) );
 
 class HackRepair_Plugin_Archiver {
 	public static $count = 0;
+	public static $active_archive = '';
 	public static $plugin_dir;
 	public static $options = array(
 		'archive_dir'     => '',
@@ -167,6 +172,12 @@ class HackRepair_Plugin_Archiver {
 				'class'    => '',
 				'callback' => array( 'HackRepair_Plugin_Archiver', 'archive_tab' ),
 			),
+			'log'      => array(
+				'title'    => __( 'Activity Log', 'hackrepair-plugin-archiver' ),
+				'href'     => admin_url( 'options-general.php?page=hackrepair-plugin-archiver-settings&tab=log' ),
+				'class'    => '',
+				'callback' => array( 'HackRepair_Plugin_Archiver_Records', 'render_log_tab' ),
+			),
 			'notes'    => array(
 				'title'    => __( 'Author Notes', 'hackrepair-plugin-archiver' ),
 				'href'     => admin_url( 'options-general.php?page=hackrepair-plugin-archiver-settings&tab=notes' ),
@@ -290,6 +301,11 @@ class HackRepair_Plugin_Archiver {
 			'archive'  => array(
 				'title' => __( 'Archived Plugins', 'hackrepair-plugin-archiver' ),
 				'href'  => admin_url( 'plugins.php?page=hackrepair-plugin-archiver' ),
+				'class' => '',
+			),
+			'log'      => array(
+				'title' => __( 'Activity Log', 'hackrepair-plugin-archiver' ),
+				'href'  => admin_url( 'options-general.php?page=hackrepair-plugin-archiver-settings&tab=log' ),
 				'class' => '',
 			),
 			'notes'    => array(
@@ -575,8 +591,10 @@ class HackRepair_Plugin_Archiver {
 					continue;
 				}
 				$wp_filesystem->chmod( $plugin_dir, $wp_filesystem->is_dir( $plugin_dir ) ? FS_CHMOD_DIR : FS_CHMOD_FILE );
-				$wp_filesystem->delete( $plugin_dir, true );
-				++$count;
+				if ( $wp_filesystem->delete( $plugin_dir, true ) ) {
+					++$count;
+					HackRepair_Plugin_Archiver_Records::record_leave( 'delete', self::$active_archive, $plugin );
+				}
 			}
 			self::$count = $count;
 			return true;
@@ -647,6 +665,7 @@ class HackRepair_Plugin_Archiver {
 					$result = $wp_filesystem->move( $plugin_dir, $target_dir );
 				if ( $result ) {
 					++$count;
+					HackRepair_Plugin_Archiver_Records::record_leave( 'restore', self::$active_archive, $plugin );
 				}
 				// }
 			}
@@ -721,6 +740,7 @@ class HackRepair_Plugin_Archiver {
 					$result = $wp_filesystem->move( $plugin_dir, $target_dir );
 					if ( $result ) {
 						++$count;
+						HackRepair_Plugin_Archiver_Records::record_archive( self::$active_archive, $plugin, $plugins[ $plugin ]['Name'], $plugins[ $plugin ]['Version'] );
 					}
 				}
 			}
@@ -751,7 +771,8 @@ class HackRepair_Plugin_Archiver {
 		if ( ! HackRepair_Plugin_Archiver_Security::is_registered( $name ) ) {
 			HackRepair_Plugin_Archiver_Security::register( $name, HackRepair_Plugin_Archiver_Security::derived_label( $name ), ! HackRepair_Plugin_Archiver_Security::is_random_name( $name ) );
 		}
-		$archive_dir = trailingslashit( $wp_filesystem->wp_content_dir() . $name );
+		self::$active_archive = $name;
+		$archive_dir          = trailingslashit( $wp_filesystem->wp_content_dir() . $name );
 		$wp_filesystem->mkdir( $archive_dir );
 		HackRepair_Plugin_Archiver_Security::protect( $archive_dir );
 		return $archive_dir;

@@ -8,7 +8,7 @@ Disable plugins without deleting them. Archive any plugin in one click, restore 
 
 Sites collect plugins that are switched off but not quite ready to be deleted: something you are testing, a tool you use twice a year, a plugin that broke the site and that nobody should click Activate on again. Plugin Archiver moves the plugin's files out of `wp-content/plugins` into a separate archive folder. WordPress stops listing it, so it cannot be activated by accident, but nothing is deleted and its settings stay in the database.
 
-Current release: **3.2.0**. See [release notes](releases/v3.2.0.md).
+Current release: **3.3.0**. See [release notes](releases/v3.3.0.md).
 
 ## What it does
 
@@ -19,12 +19,22 @@ Current release: **3.2.0**. See [release notes](releases/v3.2.0.md).
 - **Restore** a plugin to `wp-content/plugins`, one at a time or in bulk
 - **Delete** a plugin's files from the archive, one at a time or in bulk
 - **Unarchive all** at once
+- **Download** a plugin as a zip file, without leaving the dashboard
+- See **Archived on** and **In the archive for** for every plugin, and sort by either
 
 **Settings → Plugin Archiver** controls:
 
 - Auto-deactivate before archiving (recommended, on by default)
 - Several archive folders, and which one is active
+- An **Activity Log** tab: who archived, restored, deleted or downloaded what, and when, with filters, paging, CSV export and a clear button
 - Archive folder protection: whether each folder is blocked from the web, with **Check again** and **Secure this archive**
+
+**Records and downloads (3.3.0):**
+
+- **Dates.** The plugin remembers when each plugin went into the archive and by whom. Plugins archived before 3.3.0 show an estimate marked "about", taken from the folder's date.
+- **Activity log.** The newest 500 actions are kept in your database and never leave your site. Export them as CSV, or clear them (clearing is logged too).
+- **Download as zip.** One click builds a zip with a single top-level folder, ready to keep or hand to someone. It needs an administrator who can install plugins and a valid nonce, skips symbolic links, refuses plugins over 200 MB (change with the `hackrepair_plugin_archiver_download_max_bytes` filter) and works even when `DISALLOW_FILE_MODS` is set, since it reads files only.
+- **Clean uninstall.** Deleting the plugin removes its own settings, dates and log, and leaves archived plugins and their folders alone.
 
 **Safer by default (3.2.0):**
 

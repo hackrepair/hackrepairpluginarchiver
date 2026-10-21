@@ -9,6 +9,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WP_Plugins_Archive_List_Table extends WP_List_Table {
 
 	/**
+	 * Folder name of the archive being listed.
+	 *
+	 * @var string
+	 */
+	protected $archive = '';
+
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 3.1.0
@@ -81,7 +89,8 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 				}
 			}
 		}
-		$all_plugins = HackRepair_Plugin_Archiver::get_archived_plugins( $dir );
+		$this->archive = HackRepair_Plugin_Archiver_Security::active_name( HackRepair_Plugin_Archiver::$options['archive_dir'] );
+		$all_plugins   = HackRepair_Plugin_Archiver::get_archived_plugins( $dir );
 		$wprocket    = isset( $all_plugins['wp-rocket/wp-rocket.php'] );
 		$all_plugins = apply_filters( 'all_plugins', $all_plugins );
 		if ( ! $wprocket ) {
@@ -114,7 +123,21 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		}
 		$total_this_page = $totals[ $status ];
 
-		if ( $orderby ) {
+		if ( in_array( $orderby, array( 'archived', 'duration' ), true ) ) {
+			$archive = $this->archive;
+			$times   = array();
+			foreach ( array_keys( $this->items ) as $file ) {
+				$times[ $file ] = HackRepair_Plugin_Archiver_Records::archived_at( $archive, $file, $this->item_path( $file ) )[0];
+			}
+			// Newest archived first means shortest time in the archive first.
+			$newest_first = ( 'archived' === $orderby ) === ( 'DESC' === strtoupper( $order ) );
+			uksort(
+				$this->items,
+				function ( $a, $b ) use ( $times, $newest_first ) {
+					return $newest_first ? $times[ $b ] - $times[ $a ] : $times[ $a ] - $times[ $b ];
+				}
+			);
+		} elseif ( $orderby ) {
 			$orderby = ucfirst( $orderby );
 			$order   = strtoupper( $order );
 
@@ -196,11 +219,26 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 			// Provide text domain for translations in the column headers.
 			'name'        => __( 'Plugin', 'hackrepair-plugin-archiver' ),
 			'description' => __( 'Description', 'hackrepair-plugin-archiver' ),
+			'archived'    => __( 'Archived on', 'hackrepair-plugin-archiver' ),
+			'duration'    => __( 'In the archive for', 'hackrepair-plugin-archiver' ),
 		);
 	}
 
+	/**
+	 * Absolute path of an archived plugin's top-level folder or file.
+	 *
+	 * @param string $plugin_file Plugin file.
+	 * @return string
+	 */
+	protected function item_path( $plugin_file ) {
+		return trailingslashit( WP_CONTENT_DIR ) . $this->archive . '/' . HackRepair_Plugin_Archiver_Download::top_entry( $plugin_file );
+	}
+
 	protected function get_sortable_columns() {
-		return array();
+		return array(
+			'archived' => array( 'archived', true ),
+			'duration' => array( 'duration', false ),
+		);
 	}
 
 	protected function get_views() {
@@ -309,6 +347,10 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 			$actions['remove']  = '<a href="' . esc_url( $remove_url ) . '" title="' . esc_attr__( 'Delete this plugin', 'hackrepair-plugin-archiver' ) . '" class="delete">' . esc_html__( 'Delete', 'hackrepair-plugin-archiver' ) . '</a>';
 		}
 
+		if ( current_user_can( 'install_plugins' ) && class_exists( 'ZipArchive' ) && HackRepair_Plugin_Archiver_Download::is_valid_plugin_file( $plugin_file ) ) {
+			$actions['download'] = '<a href="' . esc_url( HackRepair_Plugin_Archiver_Download::url( $this->archive, $plugin_file ) ) . '" title="' . esc_attr__( 'Download this plugin as a zip file', 'hackrepair-plugin-archiver' ) . '">' . esc_html__( 'Download', 'hackrepair-plugin-archiver' ) . '</a>';
+		}
+
 		$prefix = $screen->in_admin( 'network' ) ? 'network_admin_' : '';
 
 		/**
@@ -402,6 +444,21 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 				case 'name':
 					echo "<td class='plugin-title'$style><strong>" . esc_html( $plugin_name ) . '</strong>';
 					echo $this->row_actions( $actions, true );
+					echo '</td>';
+					break;
+				case 'archived':
+				case 'duration':
+					list( $stamp, $exact ) = HackRepair_Plugin_Archiver_Records::archived_at( $this->archive, $plugin_file, $this->item_path( $plugin_file ) );
+					echo "<td class='column-" . esc_attr( $column_name ) . "'$style>";
+					if ( ! $stamp ) {
+						echo '&mdash;';
+					} elseif ( 'archived' === $column_name ) {
+						$when = wp_date( get_option( 'date_format' ), $stamp );
+						echo esc_html( $exact ? $when : sprintf( /* translators: %s: date. */ __( 'about %s', 'hackrepair-plugin-archiver' ), $when ) );
+					} else {
+						$span = human_time_diff( $stamp, time() );
+						echo esc_html( $exact ? $span : sprintf( /* translators: %s: time span such as "3 weeks". */ __( 'about %s', 'hackrepair-plugin-archiver' ), $span ) );
+					}
 					echo '</td>';
 					break;
 				case 'description':

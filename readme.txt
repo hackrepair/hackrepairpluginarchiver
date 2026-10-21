@@ -5,7 +5,7 @@ Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 6.6
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 3.2.0
+Stable tag: 3.3.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Support link: https://github.com/hackrepair/hackrepairpluginarchiver/discussions
@@ -24,6 +24,10 @@ Under **Plugins > Installed Plugins** every plugin gets an **Archive** link, and
 * Delete a plugin's files from the archive, one at a time or in bulk
 * Unarchive all at once
 * Switch between several archive folders
+* Download an archived plugin as a zip file
+* See when each plugin was archived and how long it has been there, and sort by either
+
+**Know what happened.** The Archived Plugins list shows **Archived on** and **In the archive for**, and an **Activity Log** tab records who archived, restored, deleted or downloaded what, and when. The log keeps the newest 500 entries on your own site; export it as CSV or clear it any time. Plugins archived before this feature show an estimated date marked "about".
 
 **Archives are hard to find.** New archive folders get random names such as plugins-archive-k3x9a7q2m5zt, so the location cannot be guessed. Archives made by earlier versions keep working, and one click on **Secure this archive** gives them a random name.
 
@@ -82,6 +86,15 @@ Archiving, restoring and deleting are turned off, the Archive links and bulk act
 = I upgraded and my archive folder has an old, predictable name. =
 It keeps working. Open Settings → Plugin Archiver and choose Secure this archive to rename it to a random name.
 
+= How does Download work? =
+Choose Download under an archived plugin. The plugin builds a zip with one top-level folder, skips symbolic links, and sends it to you. It needs the permission to install plugins, a valid nonce and the PHP zip extension, and it refuses plugins larger than 200 MB (adjust with the hackrepair_plugin_archiver_download_max_bytes filter). It works even when DISALLOW_FILE_MODS is set because it only reads files.
+
+= What does the activity log record? =
+The time, the user name, the action (archived, restored, deleted, downloaded, archive renamed, log cleared), the plugin and the archive. It keeps the newest 500 entries in your database, never sends them anywhere, and only administrators who can manage options can see, export or clear them.
+
+= What happens to my settings if I delete this plugin? =
+Its own settings, dates and log are removed. Archived plugins and archive folders are left exactly as they are.
+
 = Does archiving delete plugin data? =
 No. Archiving only moves plugin files.
 
@@ -120,6 +133,13 @@ Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not i
 3. Settings screen with archive directory controls
 
 == Changelog ==
+
+= 3.3.0 =
+- New: Archived on and In the archive for columns in the Archived Plugins list, sortable; plugins archived earlier show an estimated date marked "about"
+- New: Activity Log tab (newest 500 actions, filters, paging, CSV export, clear)
+- New: Download an archived plugin as a zip file (single top-level folder, symbolic links skipped, 200 MB limit)
+- New: uninstall.php removes the plugin's own settings, dates and log, and leaves archived plugins in place
+- Deleting from the archive now counts and logs only the plugins that were actually deleted
 
 = 3.2.0 =
 - New archive folders get random names (for example plugins-archive-k3x9a7q2m5zt); archives from earlier versions are registered automatically and can be renamed with Secure this archive
