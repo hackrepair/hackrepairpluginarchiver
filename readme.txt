@@ -5,7 +5,7 @@ Donate link: https://hackrepair.com/donations/buy-jim-a-coffee
 Requires at least: 6.6
 Tested up to: 7.1.3
 Requires PHP: 7.4
-Stable tag: 3.3.1
+Stable tag: 3.3.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Support link: https://wordpress.org/support/plugin/hackrepair-plugin-archiver/
@@ -129,6 +129,13 @@ Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not i
 3. Settings screen with archive directory controls
 
 == Changelog ==
+
+= 3.3.2 =
+- Deleting from the archive now asks for confirmation (single and bulk), because it removes the files permanently
+- Fix: settings messages on the Plugin Archiver screen no longer appear twice
+- Fix: when every selected plugin is skipped, only the reason is shown, not "0 plugins archived successfully"
+- With DISALLOW_FILE_MODS the New Archive field is disabled with an explanation, and the archive list has no checkboxes
+- Refused actions now return 403 Forbidden (400 for an unknown action)
 
 = 3.3.1 =
 - Fix: archived plugins no longer show an Archive link in the Archived Plugins list

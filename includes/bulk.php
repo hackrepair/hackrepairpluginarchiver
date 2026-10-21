@@ -79,7 +79,7 @@ class HackRepair_Plugin_Archiver_Bulk_Action {
 
 		// Capability check, after we know the request is ours.
 		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to perform this action.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to perform this action.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 
 		// security check
@@ -133,7 +133,9 @@ class HackRepair_Plugin_Archiver_Bulk_Action {
 				if ( ! empty( $message ) ) {
 					$count          = isset( $_REQUEST['count'] ) ? intval( $_REQUEST['count'] ) : 0;
 					$nooped_message = sprintf( translate_nooped_plural( $message, $count, 'hackrepair-plugin-archiver' ), $count );
-					echo '<div class="updated"><p>' . esc_html( $nooped_message ) . '</p></div>';
+					if ( HackRepair_Plugin_Archiver::show_success( $count ) ) {
+						echo '<div class="updated"><p>' . esc_html( $nooped_message ) . '</p></div>';
+					}
 				}
 				HackRepair_Plugin_Archiver::skipped_notice( 'archive' );
 			}

@@ -66,6 +66,11 @@ unlink( $hdr . '/demo/demo.php' );
 rmdir( $hdr . '/demo' );
 rmdir( $hdr );
 
+// Success notice visibility (3.3.2).
+check( 'success shown when some handled', $R::success_visible( 2, 1 ) );
+check( 'success shown when nothing skipped', $R::success_visible( 0, 0 ) );
+check( 'success hidden when all skipped', ! $R::success_visible( 0, 1 ) );
+
 // Download helpers.
 foreach ( array( 'akismet/akismet.php', 'hello.php', 'my-plugin_2/inc/a.b.php' ) as $ok ) {
 	check( 'valid plugin file ' . $ok, $D::is_valid_plugin_file( $ok ) );

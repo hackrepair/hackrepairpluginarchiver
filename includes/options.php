@@ -184,6 +184,11 @@ class HackRepair_Plugin_Archiver_Options {
 	public static function text_plugins( $args ) {
 		$size  = isset( $args['size'] ) ? (int) $args['size'] : 40;
 		$value = isset( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) ? HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] : '';
+		if ( ! HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
+			echo '<input type="text" id="' . esc_attr( $args['option_id'] ) . '" size="' . esc_attr( $size ) . '" value="" disabled>';
+			echo '<p class="description">' . esc_html__( 'File changes are disabled on this site (DISALLOW_FILE_MODS), so new archives cannot be created.', 'hackrepair-plugin-archiver' ) . '</p>';
+			return;
+		}
 		echo '<input type="text" id="' . esc_attr( $args['option_id'] ) . '" name="' . esc_attr( self::name( $args ) ) . '" size="' . esc_attr( $size ) . '" value="' . esc_attr( $value ) . '">';
 		self::description( $args );
 	}
@@ -235,15 +240,15 @@ class HackRepair_Plugin_Archiver_Options {
 	 */
 	public static function page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 		$keys    = array_keys( self::$tabs );
 		$current = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab selection only.
 		if ( ! in_array( $current, $keys, true ) ) {
 			$current = (string) reset( $keys );
 		}
+		// WordPress already prints settings messages on Settings screens; printing them here too showed each one twice.
 		echo '<div class="wrap"><h1>' . esc_html( self::$title ) . '</h1>';
-		settings_errors( self::$id );
 		HackRepair_Plugin_Archiver_Security::render_notices( HackRepair_Plugin_Archiver::$options['archive_dir'] );
 		self::tabs( $current );
 		call_user_func( self::content( $current ) );

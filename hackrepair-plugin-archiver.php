@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Plugin Name:       The Hack Repair Guy's Plugin Archiver
  * Plugin URI:        https://wordpress.org/plugins/hackrepair-plugin-archiver/
  * Description:       Quickly deactivate and archive a plugin for later use. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
- * Version:           3.3.1
+ * Version:           3.3.2
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Author:            Jim Walker, The Hack Repair Guy
@@ -206,7 +206,7 @@ class HackRepair_Plugin_Archiver {
 	// Render the Archived Plugins list inside the Settings page "Archived Plugins" tab.
 	public static function archive_tab() {
 		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 		if ( ! class_exists( 'WP_List_Table' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
@@ -283,7 +283,7 @@ class HackRepair_Plugin_Archiver {
 
 	public static function render_archive_page() {
 		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}// Ensure list table class is available.
 		if ( ! class_exists( 'WP_List_Table' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
@@ -438,22 +438,22 @@ class HackRepair_Plugin_Archiver {
 			// Verify nonce for security
 			// Check user capabilities
 		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 
 		if ( isset( $_REQUEST['action'] ) && isset( $_REQUEST['_wpnonce'] ) ) {
 			if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_REQUEST['_wpnonce'] ) ), 'bulk-plugins' ) ) {
-				wp_die( esc_html__( 'Security check failed', 'hackrepair-plugin-archiver' ) );
+				wp_die( esc_html__( 'Security check failed', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 			}
 			if ( ! current_user_can( 'install_plugins' ) ) {
-				wp_die( esc_html__( 'You do not have sufficient permissions to change archived plugins.', 'hackrepair-plugin-archiver' ) );
+				wp_die( esc_html__( 'You do not have sufficient permissions to change archived plugins.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 			}
 			self::require_file_mods();
 
 			// Validate action parameter
 			$action = sanitize_key( $_REQUEST['action'] );
 			if ( ! in_array( $action, array( 'restore-selected', 'remove-selected' ), true ) ) {
-				wp_die( esc_html__( 'Invalid action', 'hackrepair-plugin-archiver' ) );
+				wp_die( esc_html__( 'Invalid action', 'hackrepair-plugin-archiver' ), '', array( 'response' => 400 ) );
 			}
 
 			switch ( $action ) {
@@ -494,7 +494,9 @@ class HackRepair_Plugin_Archiver {
 					// Validate count parameter
 					$count          = isset( $_REQUEST['count'] ) ? intval( $_REQUEST['count'] ) : 0;
 					$nooped_message = sprintf( translate_nooped_plural( $message, $count, 'hackrepair-plugin-archiver' ), $count );
-					echo '<div class="updated"><p>' . esc_html( $nooped_message ) . '</p></div>';
+					if ( self::show_success( $count ) ) {
+						echo '<div class="updated"><p>' . esc_html( $nooped_message ) . '</p></div>';
+					}
 				}
 				self::skipped_notice( 'restore' );
 			}
@@ -506,7 +508,9 @@ class HackRepair_Plugin_Archiver {
 					// Validate count parameter
 					$count          = isset( $_REQUEST['count'] ) ? intval( $_REQUEST['count'] ) : 0;
 					$nooped_message = sprintf( translate_nooped_plural( $message, $count, 'hackrepair-plugin-archiver' ), $count );
-					echo '<div class="updated"><p>' . esc_html( $nooped_message ) . '</p></div>';
+					if ( self::show_success( $count ) ) {
+						echo '<div class="updated"><p>' . esc_html( $nooped_message ) . '</p></div>';
+					}
 				}
 			}
 		}
@@ -514,9 +518,20 @@ class HackRepair_Plugin_Archiver {
 	// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 	/**
-	 * Explain plugins that were left where they were because the destination already had one.
+	 * Whether to print the success count after an action (reads the skipped count from the request).
 	 *
-	 * @param string $what archive or restore.
+	 * @param int $count Plugins handled.
+	 * @return bool
+	 */
+	public static function show_success( $count ) {
+		$skipped = isset( $_REQUEST['skipped'] ) ? absint( $_REQUEST['skipped'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display only.
+		return HackRepair_Plugin_Archiver_Records::success_visible( $count, $skipped );
+	}
+
+	/**
+	 * Explain plugins left in place because of a folder-name clash.
+	 *
+	 * @param string $what restore or archive.
 	 */
 	public static function skipped_notice( $what ) {
 		$skipped = isset( $_REQUEST['skipped'] ) ? absint( $_REQUEST['skipped'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display only.
@@ -567,7 +582,7 @@ class HackRepair_Plugin_Archiver {
 	public static function bulk_remove( $checked = false ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Signature shared with the bulk handler.
 		// Check user capabilities
 		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 		self::require_file_mods();
 
@@ -622,7 +637,7 @@ class HackRepair_Plugin_Archiver {
 	public static function bulk_restore( $checked = false ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found -- Signature shared with the bulk handler.
 		// Check user capabilities
 		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 		self::require_file_mods();
 
@@ -695,7 +710,7 @@ class HackRepair_Plugin_Archiver {
 	public static function bulk_archive( $checked ) {
 		// Check user capabilities
 		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 		self::require_file_mods();
 
@@ -796,7 +811,7 @@ class HackRepair_Plugin_Archiver {
 	 */
 	private static function require_file_mods() {
 		if ( ! HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
-			wp_die( esc_html__( 'File changes are disabled on this site (DISALLOW_FILE_MODS), so plugins cannot be archived, restored or deleted here.', 'hackrepair-plugin-archiver' ) );
+			wp_die( esc_html__( 'File changes are disabled on this site (DISALLOW_FILE_MODS), so plugins cannot be archived, restored or deleted here.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 	}
 

@@ -228,10 +228,38 @@ class HackRepair_Plugin_Archiver_List_Table extends WP_List_Table {
 		esc_html_e( 'You do not appear to have any archived plugins', 'hackrepair-plugin-archiver' );
 	}
 
+	/**
+	 * Whether the current user may change the archive here.
+	 *
+	 * @return bool
+	 */
+	private static function can_change() {
+		return current_user_can( 'install_plugins' ) && HackRepair_Plugin_Archiver_Security::file_mods_allowed();
+	}
+
+	/**
+	 * Show the table, then ask before a bulk Delete.
+	 */
+	public function display() {
+		parent::display();
+		static $printed = false;
+		if ( $printed || ! self::can_change() ) {
+			return;
+		}
+		$printed = true;
+		$message = __( 'Delete the selected plugins from the archive? Their files are removed permanently.', 'hackrepair-plugin-archiver' );
+		wp_print_inline_script_tag(
+			'document.addEventListener("submit",function(e){var f=e.target;if(!f.querySelector||!f.querySelector(\'input[name="checked[]"]\')){return;}'
+			. 'var a=f.querySelector(\'select[name="action"]\'),b=f.querySelector(\'select[name="action2"]\');'
+			. 'var by=e.submitter&&e.submitter.id==="doaction2"?b:a;'
+			. 'if(by&&by.value==="remove-selected"&&!window.confirm(' . wp_json_encode( $message ) . ')){e.preventDefault();}});'
+		);
+	}
+
 	public function get_columns() {
 		global $status;
 
-		return array(
+		$columns = array(
 			'cb'          => ! in_array( $status, array( 'mustuse', 'dropins' ), true ) ? '<input type="checkbox" />' : '',
 			// Provide text domain for translations in the column headers.
 			'name'        => __( 'Plugin', 'hackrepair-plugin-archiver' ),
@@ -239,6 +267,11 @@ class HackRepair_Plugin_Archiver_List_Table extends WP_List_Table {
 			'archived'    => __( 'Archived on', 'hackrepair-plugin-archiver' ),
 			'duration'    => __( 'In the archive for', 'hackrepair-plugin-archiver' ),
 		);
+		// No checkbox column when nothing can be changed: there are no bulk actions to apply.
+		if ( ! self::can_change() ) {
+			unset( $columns['cb'] );
+		}
+		return $columns;
 	}
 
 	/**
@@ -358,7 +391,9 @@ class HackRepair_Plugin_Archiver_List_Table extends WP_List_Table {
 			$restore_url        = wp_nonce_url( 'plugins.php?page=hackrepair-plugin-archiver&action=restore-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ) . '&paged=' . intval( $page ) . '&s=' . rawurlencode( $s ), 'bulk-plugins' );
 			$remove_url         = wp_nonce_url( 'plugins.php?page=hackrepair-plugin-archiver&action=remove-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ) . '&paged=' . intval( $page ) . '&s=' . rawurlencode( $s ), 'bulk-plugins' );
 			$actions['restore'] = '<a href="' . esc_url( $restore_url ) . '" title="' . esc_attr__( 'Unarchive this plugin', 'hackrepair-plugin-archiver' ) . '">' . esc_html__( 'Unarchive', 'hackrepair-plugin-archiver' ) . '</a>';
-			$actions['remove']  = '<a href="' . esc_url( $remove_url ) . '" title="' . esc_attr__( 'Delete this plugin', 'hackrepair-plugin-archiver' ) . '" class="delete">' . esc_html__( 'Delete', 'hackrepair-plugin-archiver' ) . '</a>';
+			/* translators: %s: plugin name. */
+			$confirm           = sprintf( __( 'Delete %s from the archive? Its files are removed permanently.', 'hackrepair-plugin-archiver' ), wp_strip_all_tags( $plugin_data['Name'] ) );
+			$actions['remove'] = '<a href="' . esc_url( $remove_url ) . '" title="' . esc_attr__( 'Delete this plugin', 'hackrepair-plugin-archiver' ) . '" class="delete" onclick="' . esc_attr( 'return window.confirm(' . wp_json_encode( $confirm ) . ');' ) . '">' . esc_html__( 'Delete', 'hackrepair-plugin-archiver' ) . '</a>';
 		}
 
 		if ( HackRepair_Plugin_Archiver_Security::can_view() && class_exists( 'ZipArchive' ) && HackRepair_Plugin_Archiver_Download::is_valid_plugin_file( $plugin_file ) ) {

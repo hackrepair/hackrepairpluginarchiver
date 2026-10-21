@@ -178,6 +178,17 @@ class HackRepair_Plugin_Archiver_Records {
 	}
 
 	/**
+	 * Whether a success count is worth showing: hide "0 plugins ..." when everything was skipped.
+	 *
+	 * @param int $count   Plugins handled.
+	 * @param int $skipped Plugins skipped.
+	 * @return bool
+	 */
+	public static function success_visible( $count, $skipped ) {
+		return (int) $count > 0 || 0 === (int) $skipped;
+	}
+
+	/**
 	 * Whether a screen slug belongs to Plugin Archiver (its list page or its settings page).
 	 *
 	 * @param string $page The page query value.
