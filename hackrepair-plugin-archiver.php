@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Plugin Name:       The Hack Repair Guy's Plugin Archiver
  * Plugin URI:        https://wordpress.org/plugins/hackrepair-plugin-archiver/
  * Description:       Quickly deactivate and archive a plugin for later use. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
- * Version:           3.3.0
+ * Version:           3.3.1
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Author:            Jim Walker, The Hack Repair Guy
@@ -538,12 +538,13 @@ class HackRepair_Plugin_Archiver {
 		$exclude_context = array( 'mustuse', 'dropins' );
 		$page            = isset( $_REQUEST['page'] ) ? sanitize_key( wp_unslash( $_REQUEST['page'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Screen detection only.
 		$this_plugin     = plugin_basename( __FILE__ );
+		$own_screen      = HackRepair_Plugin_Archiver_Records::is_own_page( $page );
 
-		if ( ! in_array( $context, $exclude_context, true ) && ( $plugin_file !== $this_plugin ) && ( 'hackrepair-plugin-archiver' !== $page ) ) {
+		if ( ! in_array( $context, $exclude_context, true ) && ( $plugin_file !== $this_plugin ) && ! $own_screen ) {
 			if ( current_user_can( 'install_plugins' ) && HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
 				$actions['archive'] = '<a href="' . esc_url( wp_nonce_url( 'plugins.php?action=archive-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ), 'bulk-plugins' ) ) . '" aria-label="' . esc_attr( sprintf( /* translators: %s: plugin name. */ __( 'Archive %s', 'hackrepair-plugin-archiver' ), wp_strip_all_tags( $plugin_data['Name'] ) ) ) . '">' . esc_html__( 'Archive', 'hackrepair-plugin-archiver' ) . '</a>';
 			}
-		} elseif ( $plugin_file === $this_plugin && 'hackrepair-plugin-archiver' !== $page ) {
+		} elseif ( $plugin_file === $this_plugin && ! $own_screen ) {
 			if ( current_user_can( 'install_plugins' ) && HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
 				$actions['restore-all'] = '<a href="' . esc_url( wp_nonce_url( 'plugins.php?page=hackrepair-plugin-archiver&action=restore-selected&all=true', 'bulk-plugins' ) ) . '" aria-label="' . esc_attr( __( 'Unarchive all archived plugins', 'hackrepair-plugin-archiver' ) ) . '">' . esc_html__( 'Unarchive All', 'hackrepair-plugin-archiver' ) . '</a>';
 			}
@@ -599,10 +600,11 @@ class HackRepair_Plugin_Archiver {
 				if ( ! $real_plugin_dir || false === $real_archive_dir || strpos( $real_plugin_dir, $real_archive_dir ) !== 0 ) {
 					continue;
 				}
+				$described = HackRepair_Plugin_Archiver_Records::describe( $archive_dir, $plugin );
 				$wp_filesystem->chmod( $plugin_dir, $wp_filesystem->is_dir( $plugin_dir ) ? FS_CHMOD_DIR : FS_CHMOD_FILE );
 				if ( $wp_filesystem->delete( $plugin_dir, true ) ) {
 					++$count;
-					HackRepair_Plugin_Archiver_Records::record_leave( 'delete', self::$active_archive, $plugin );
+					HackRepair_Plugin_Archiver_Records::record_leave( 'delete', self::$active_archive, $plugin, $described );
 				}
 			}
 			self::$count = $count;
@@ -671,10 +673,11 @@ class HackRepair_Plugin_Archiver {
 					++self::$skipped; // Never overwrite a plugin that is already installed.
 					continue;
 				}
-					$result = $wp_filesystem->move( $plugin_dir, $target_dir );
+					$described = HackRepair_Plugin_Archiver_Records::describe( $archive_dir, $plugin );
+					$result    = $wp_filesystem->move( $plugin_dir, $target_dir );
 				if ( $result ) {
 					++$count;
-					HackRepair_Plugin_Archiver_Records::record_leave( 'restore', self::$active_archive, $plugin );
+					HackRepair_Plugin_Archiver_Records::record_leave( 'restore', self::$active_archive, $plugin, $described );
 				}
 			}
 			self::$count = $count;

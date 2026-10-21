@@ -10,6 +10,9 @@ define( 'ABSPATH', __DIR__ . '/' );
 function __( $t ) {
 	return $t;
 }
+function sanitize_text_field( $t ) {
+	return trim( strip_tags( (string) $t ) );
+}
 function add_action() {}
 function add_filter() {}
 
@@ -43,6 +46,25 @@ check( 'cap keeps newest 500', 500 === count( $R::cap_entries( $entries, 500 ) )
 check( 'filter by action', 300 === count( $R::filter_entries( $entries, 'archive' ) ) );
 check( 'empty filter returns all', 600 === count( $R::filter_entries( $entries, '' ) ) );
 check( 'manifest key', 'plugins-x|a/b.php' === $R::key( 'plugins-x', 'a/b.php' ) );
+
+// Archive screens and header lookup (3.3.1).
+foreach ( array( 'hackrepair-plugin-archiver', 'hackrepair-plugin-archiver-settings' ) as $page ) {
+	check( 'own page ' . $page, $R::is_own_page( $page ) );
+}
+foreach ( array( '', 'plugins', 'other-plugin', array( 'x' ), null ) as $page ) {
+	check( 'not own page ' . json_encode( $page ), ! $R::is_own_page( $page ) );
+}
+$hdr = sys_get_temp_dir() . '/hrpa-hdr-' . bin2hex( random_bytes( 4 ) );
+mkdir( $hdr . '/demo', 0777, true );
+file_put_contents( $hdr . '/demo/demo.php', "<?php\n/**\n * Plugin Name: wp Hosting Performance Check\n * Version: 2.18.8\n */\n" );
+$info = $R::describe( $hdr, 'demo/demo.php' );
+check( 'describe reads name', 'wp Hosting Performance Check' === $info['name'] );
+check( 'describe reads version', '2.18.8' === $info['version'] );
+$info = $R::describe( $hdr, 'demo/missing.php' );
+check( 'describe missing file is blank', '' === $info['name'] && '' === $info['version'] );
+unlink( $hdr . '/demo/demo.php' );
+rmdir( $hdr . '/demo' );
+rmdir( $hdr );
 
 // Download helpers.
 foreach ( array( 'akismet/akismet.php', 'hello.php', 'my-plugin_2/inc/a.b.php' ) as $ok ) {

@@ -5,7 +5,7 @@ Donate link: https://hackrepair.com/donations/buy-jim-a-coffee
 Requires at least: 6.6
 Tested up to: 7.1.3
 Requires PHP: 7.4
-Stable tag: 3.3.0
+Stable tag: 3.3.1
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Support link: https://wordpress.org/support/plugin/hackrepair-plugin-archiver/
@@ -129,6 +129,10 @@ Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not i
 3. Settings screen with archive directory controls
 
 == Changelog ==
+
+= 3.3.1 =
+- Fix: archived plugins no longer show an Archive link in the Archived Plugins list
+- Fix: the Activity Log now shows the plugin name when restoring or deleting a plugin that was archived before 3.3.0
 
 = 3.3.0 =
 - Fix: with DISALLOW_FILE_MODS the Archived Plugins screen and Download now stay available (read-only), as documented; viewing needs activate_plugins, changes still need install_plugins

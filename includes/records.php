@@ -178,17 +178,59 @@ class HackRepair_Plugin_Archiver_Records {
 	}
 
 	/**
+	 * Whether a screen slug belongs to Plugin Archiver (its list page or its settings page).
+	 *
+	 * @param string $page The page query value.
+	 * @return bool
+	 */
+	public static function is_own_page( $page ) {
+		return is_string( $page ) && 0 === strpos( $page, 'hackrepair-plugin-archiver' );
+	}
+
+	/**
+	 * Read a plugin's name and version from its main file header.
+	 *
+	 * @param string $archive_dir Absolute path of the archive folder.
+	 * @param string $plugin_file Plugin file such as folder/main.php.
+	 * @return array array( name, version ); empty strings when unreadable.
+	 */
+	public static function describe( $archive_dir, $plugin_file ) {
+		$out  = array(
+			'name'    => '',
+			'version' => '',
+		);
+		$path = rtrim( (string) $archive_dir, '/\\' ) . '/' . $plugin_file;
+		if ( ! is_file( $path ) || ! is_readable( $path ) ) {
+			return $out;
+		}
+		$head = (string) file_get_contents( $path, false, null, 0, 8192 ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- Reads a local header, not a URL.
+		if ( 1 === preg_match( '/^[ \t\/*#@]*Plugin Name:(.*)$/mi', $head, $m ) ) {
+			$out['name'] = sanitize_text_field( trim( $m[1] ) );
+		}
+		if ( 1 === preg_match( '/^[ \t\/*#@]*Version:(.*)$/mi', $head, $m ) ) {
+			$out['version'] = sanitize_text_field( trim( $m[1] ) );
+		}
+		return $out;
+	}
+
+	/**
 	 * Forget an archived plugin that has been restored or deleted.
 	 *
 	 * @param string $action      restore or delete.
 	 * @param string $archive     Archive folder name.
 	 * @param string $plugin_file Plugin file.
+	 * @param array  $described   Optional name and version read from the plugin file, used when no record exists.
 	 */
-	public static function record_leave( $action, $archive, $plugin_file ) {
+	public static function record_leave( $action, $archive, $plugin_file, $described = array() ) {
 		$manifest = self::manifest();
 		$key      = self::key( $archive, $plugin_file );
-		$name     = isset( $manifest[ $key ] ) ? $manifest[ $key ]['name'] : '';
-		$version  = isset( $manifest[ $key ] ) ? $manifest[ $key ]['version'] : '';
+		// Plugins archived before the record existed have no saved name; use the one read from the file.
+		$name    = isset( $described['name'] ) ? (string) $described['name'] : '';
+		$version = isset( $described['version'] ) ? (string) $described['version'] : '';
+		if ( isset( $manifest[ $key ] ) ) {
+			$name    = $manifest[ $key ]['name'];
+			$version = $manifest[ $key ]['version'];
+		}
 		if ( isset( $manifest[ $key ] ) ) {
 			unset( $manifest[ $key ] );
 			self::save_manifest( $manifest );

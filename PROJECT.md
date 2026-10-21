@@ -2,7 +2,7 @@
 
 Developer notes for contributors. For what the plugin does, see [README.md](README.md "What the plugin does and how to install it").
 
-Current release: **3.3.0**, in preparation (WordPress.org SVN tag `3.3.0` not yet created; 3.2.0 and 3.3.0 are built and on GitHub only). Published release: **3.1.1** (SVN tag `3.1.1`, September 11, 2025). 3.1.2 was never published to WordPress.org; its changes ship in 3.2.0.
+Current release: **3.3.1**, in preparation (WordPress.org SVN tag `3.3.1` not yet created; 3.2.0, 3.3.0 and 3.3.1 are built and on GitHub only). Published release: **3.1.1** (SVN tag `3.1.1`, September 11, 2025). 3.1.2 was never published to WordPress.org; its changes ship in 3.2.0.
 
 ## Scope
 
@@ -84,6 +84,7 @@ Decided October 20, 2026 after reviewing a competing plugin. Ideas only; nothing
 
 - **3.1.2**: header and readme refresh, version bump. No behavior change.
 - **3.2.0** (security, built): random 12-character archive folder names (existing archives registered and offered a "Secure this archive" rename), web-access protection files (`.htaccess`, `web.config`, `index.php`, marker) with a self-request reachability check and a Site Health test, `DISALLOW_FILE_MODS` support, a direct-write precheck, the nested-function fix.
+- **3.3.1** (fix release, built): no "Archive" link inside the Archived Plugins list; log shows plugin names for plugins archived before 3.3.0. Found by testing the upgrade from 3.1.1 on a live site.
 - **3.3.0** (records, built): a record of archived plugins with "Archived on" and "In the archive for" columns, an activity log (capped, with CSV export), download as zip, `uninstall.php`.
 - Rejected for now: health flags, WP-CLI, email digest, auto-archive, auto-delete, clean-up-and-delete, update on restore, multisite automation.
 

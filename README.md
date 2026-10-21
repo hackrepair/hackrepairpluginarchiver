@@ -8,7 +8,7 @@ Disable plugins without deleting them. Archive any plugin in one click, restore 
 
 Sites collect plugins that are switched off but not quite ready to be deleted: something you are testing, a tool you use twice a year, a plugin that broke the site and that nobody should click Activate on again. Plugin Archiver moves the plugin's files out of `wp-content/plugins` into a separate archive folder. WordPress stops listing it, so it cannot be activated by accident, but nothing is deleted and its settings stay in the database.
 
-Current release: **3.3.0**. See [release notes](releases/v3.3.0.md).
+Current release: **3.3.1**. See [release notes](releases/v3.3.1.md).
 
 ## What it does
 
