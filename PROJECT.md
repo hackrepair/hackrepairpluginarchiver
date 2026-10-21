@@ -2,13 +2,13 @@
 
 Developer notes for contributors. For what the plugin does, see [README.md](README.md "What the plugin does and how to install it").
 
-Current release: **3.1.2**, in preparation (WordPress.org SVN tag `3.1.2` not yet created). Published release: **3.1.1** (SVN tag `3.1.1`, September 11, 2025).
+Current release: **3.2.0**, in preparation (WordPress.org SVN tag `3.2.0` not yet created). Published release: **3.1.1** (SVN tag `3.1.1`, September 11, 2025). 3.1.2 was never published to WordPress.org; its changes ship in 3.2.0.
 
 ## Scope
 
-Moves a plugin's files out of `wp-content/plugins` into an archive folder so WordPress no longer lists it, and moves them back on request. It never touches a plugin's database settings, never activates anything on restore, and makes no outside requests.
+Moves a plugin's files out of `wp-content/plugins` into an archive folder so WordPress no longer lists it, and moves them back on request. It never touches a plugin's database settings, never activates anything on restore, and makes no outside requests except one check of its own archive folder against your own site.
 
-Planned (decided October 20, 2026, see "Roadmap"): random archive folder names, web-access protection for archive folders, `DISALLOW_FILE_MODS` support, a record of archived plugins with dates, an activity log, and download as zip.
+Built in 3.2.0: random archive folder names, web-access protection, `DISALLOW_FILE_MODS` support. Planned for 3.3.0 (see "Roadmap"): a record of archived plugins with dates, an activity log, and download as zip.
 
 ## Distribution
 
@@ -25,8 +25,9 @@ Distributed by **WordPress.org**, not GitHub releases. This differs from the Git
 - `includes/bulk.php`: `HackRepair_Plugin_Archiver_Bulk_Action`, bulk action registration and handling on the Plugins screen.
 - `includes/list.php`: `WP_Plugins_Archive_List_Table`, the Archived Plugins table.
 - `includes/options.php`: `HackRepair_Plugin_Archiver_Options`, Settings > Plugin Archiver and archive-folder management.
+- `includes/security.php`: `HackRepair_Plugin_Archiver_Security`, archive naming, the registry of archives, legacy migration, protection files, the cached reachability check, the Site Health test, the Secure and Check-again admin-post handlers, and the settings panel and notices.
 - `includes/pointers.php`, `includes/notes.php`: the admin pointer and the Author Notes panel.
-- Option key: `hackrepair-plugin-archiver_options` (`archive_dir`, `archive_dir_add`, `deactivate`).
+- Option keys: `hackrepair-plugin-archiver_options` (`archive_dir`, `archive_dir_add`, `deactivate`); `hackrepair-plugin-archiver_archives` (registry: folder => label, created, legacy; not autoloaded); `hackrepair-plugin-archiver_db_version` (one-time migration marker). Transients `hrpa_reach_<md5>` cache the reachability result (12 hours, 5 minutes after an error).
 - `.wordpress-org/`: banner (772x250, 244x245) and icons (128, 256). A 1544x500 retina banner has not been made.
 - `docs/audits/`: the November 2024 security and PHP 8.3 audits of 2.0.4. Historical; 3.x addressed most findings.
 
@@ -34,10 +35,15 @@ Distributed by **WordPress.org**, not GitHub releases. This differs from the Git
 
 - All actions need a capability (`install_plugins` today) and a nonce. Plugin and archive paths are validated and must stay inside their own folders. Moves use the WordPress Filesystem API.
 - Nothing is overwritten: a move to an existing destination is refused.
-- No outside requests, no scheduled jobs, no tracking.
+- No outside requests (the only request is to the site's own archive marker file), no scheduled jobs, no tracking.
+- Archive folder names are `plugins-archive-<12 random chars>` or `plugins-archive-<label>-<8 random chars>`. Only folders in the registry can be selected. Protection files are rewritten before archive/restore. Renaming a legacy folder (Secure this archive) needs direct filesystem access.
+- With `DISALLOW_FILE_MODS` (`wp_is_file_mod_allowed()`), every write path stops and the screens are read-only.
+- The `hackrepair_plugin_archiver_base_dir` filter planned earlier was not built; moving the archive outside the web root is not supported yet.
 - Archived plugins are left in place if this plugin is deactivated or deleted.
 
 ## Tests and tooling
+
+`php tests/security-logic.php` tests naming, name validation, protection file contents, response classification and the registry with stubbed WordPress functions (no WordPress install needed). It does not exercise the WordPress screens; check those on a test site.
 
 `tests/package-permissions.py` checks that the built ZIP uses mode 0644 for every entry and matches the source byte for byte.
 
@@ -67,7 +73,7 @@ Run the shared PHPCS installation before committing PHP changes:
 Decided October 20, 2026 after reviewing a competing plugin. Ideas only; nothing is copied from it.
 
 - **3.1.2**: header and readme refresh, version bump. No behavior change.
-- **3.2.0** (security): random 12-character archive folder names (existing archives registered and offered a "Secure this archive" rename), web-access protection files (`.htaccess`, `web.config`, `index.php`, marker) with a self-request reachability check and a Site Health test, `DISALLOW_FILE_MODS` support, a direct-write precheck, the nested-function fix.
+- **3.2.0** (security, built): random 12-character archive folder names (existing archives registered and offered a "Secure this archive" rename), web-access protection files (`.htaccess`, `web.config`, `index.php`, marker) with a self-request reachability check and a Site Health test, `DISALLOW_FILE_MODS` support, a direct-write precheck, the nested-function fix.
 - **3.3.0** (records): a record of archived plugins with "Archived on" and "In the archive for" columns, an activity log (capped, with CSV export), download as zip, `uninstall.php`.
 - Rejected for now: health flags, WP-CLI, email digest, auto-archive, auto-delete, clean-up-and-delete, update on restore, multisite automation.
 

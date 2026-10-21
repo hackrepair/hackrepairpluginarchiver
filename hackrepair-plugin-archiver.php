@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Plugin Name:       The Hack Repair Guy's Plugin Archiver
  * Plugin URI:        https://wordpress.org/plugins/hackrepair-plugin-archiver/
  * Description:       Quickly deactivate and archive a plugin for later use. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
- * Version:           3.1.2
+ * Version:           3.2.0
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Author:            Jim Walker, The Hack Repair Guy
@@ -23,6 +23,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @package HackRepair_Plugin_Archiver
  */
 
+
+require_once plugin_dir_path( __FILE__ ) . 'includes/security.php';
+HackRepair_Plugin_Archiver_Security::init();
 
 add_action( 'init', array( 'HackRepair_Plugin_Archiver', 'init' ) );
 
@@ -39,13 +42,15 @@ class HackRepair_Plugin_Archiver {
 		self::$plugin_dir = plugin_dir_path( __FILE__ );
 		$options          = get_option( 'hackrepair-plugin-archiver_options' );
 		self::$options    = wp_parse_args( $options, self::$options );
+		self::$options = HackRepair_Plugin_Archiver_Security::maybe_migrate( self::$options );
 		if ( '' === self::$options['archive_dir'] ) {
-			self::$options['archive_dir'] = 'plugins-archive-' . substr( md5( get_bloginfo( 'url' ) ), 0, 6 );
+			// Nothing could be created (for example DISALLOW_FILE_MODS); read-only fallback.
+			self::$options['archive_dir'] = HackRepair_Plugin_Archiver_Security::legacy_default_name();
 		}
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( 'HackRepair_Plugin_Archiver', 'admin_init' ) );
 		}
-		if ( class_exists( 'HackRepair_Plugin_Archiver_Bulk_Action' ) ) {
+		if ( class_exists( 'HackRepair_Plugin_Archiver_Bulk_Action' ) && HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
 			$bulk_action = new HackRepair_Plugin_Archiver_Bulk_Action();
 			$bulk_action->init();
 			$bulk_action->register_bulk_action(
@@ -66,26 +71,23 @@ class HackRepair_Plugin_Archiver {
 		add_action( 'admin_notices', array( 'HackRepair_Plugin_Archiver', 'admin_notice' ) );
 		add_filter( 'views_plugins', array( 'HackRepair_Plugin_Archiver', 'plugin_views' ) );
 	}
+	/**
+	 * Registered archive folders (folder name => label).
+	 *
+	 * @return array
+	 */
 	public static function get_archive_dirs() {
-		global $wp_filesystem;
-		WP_Filesystem();
-		$dirlist = $wp_filesystem->dirlist( WP_CONTENT_DIR );
-		$result  = array();
-		foreach ( $dirlist as $key => $dir ) {
-			if ( 0 === strpos( $dir['name'], 'plugins-' ) ) {
-				// Sanitize directory name
-				$sanitized_name = sanitize_file_name( $dir['name'] );
-				if ( $sanitized_name === $dir['name'] ) {
-					$result[] = $dir['name'];
-				}
-			}
+		$result = array();
+		foreach ( HackRepair_Plugin_Archiver_Security::registry() as $dir => $info ) {
+			$result[ $dir ] = $info['label'];
 		}
 		if ( ! $result ) {
-			// Sanitize the default archive directory
-			$result[] = sanitize_file_name( self::$options['archive_dir'] );
+			$active            = sanitize_file_name( self::$options['archive_dir'] );
+			$result[ $active ] = HackRepair_Plugin_Archiver_Security::derived_label( $active );
 		}
 		return $result;
 	}
+
 	public static function pointer_filter( $pointers ) {
 		if ( ! isset( $pointers['plugins_page_hackrepair-plugin-archiver'] ) ) {
 			$pointers['plugins_page_hackrepair-plugin-archiver'] = array();
@@ -128,17 +130,17 @@ class HackRepair_Plugin_Archiver {
 				'callback' => '',
 				'options'  => array(
 					'archive_dir'     => array(
-						'title'    => __( 'Current Archive Directory', 'hackrepair-plugin-archiver' ),
+						'title'    => __( 'Current Archive', 'hackrepair-plugin-archiver' ),
 						'args'     => array(
 							'values'      => $archive_dirs,
-							'description' => __( 'Name of the directory to store archived plugins in. Relative to <code>WP_CONTENT_DIR</code>.', 'hackrepair-plugin-archiver' ),
+							'description' => __( 'The archive that new plugins are moved into.', 'hackrepair-plugin-archiver' ),
 						),
 						'callback' => 'select',
 					),
 					'archive_dir_add' => array(
-						'title'    => __( 'New Archive Directory', 'hackrepair-plugin-archiver' ),
+						'title'    => __( 'New Archive', 'hackrepair-plugin-archiver' ),
 						'args'     => array(
-							'description' => __( 'Create a new Plugin Archive directory. Will be prefixed with <code>plugins-</code>.', 'hackrepair-plugin-archiver' ),
+							'description' => __( 'Optional. Type a name to create another archive. Its folder gets a random suffix so it cannot be guessed.', 'hackrepair-plugin-archiver' ),
 						),
 						'callback' => 'text_plugins',
 					),
@@ -247,6 +249,26 @@ class HackRepair_Plugin_Archiver {
 		return $custom;
 	}
 
+	/**
+	 * Tab navigation markup.
+	 *
+	 * @param array  $tabs    Tabs (title, href, class).
+	 * @param string $current Current tab key.
+	 * @return string
+	 */
+	private static function generate_tabs( $tabs, $current = 'archive' ) {
+		$result = '';
+		if ( count( $tabs ) ) {
+			$result = '<h2 class="nav-tab-wrapper">';
+			foreach ( $tabs as $tab_key => $tab ) {
+				$class   = 'nav-tab' . ( $tab_key === $current ? ' nav-tab-active' : '' );
+				$result .= '<a class="' . esc_attr( $class ) . '" href="' . esc_url( $tab['href'] ) . '">' . esc_html( $tab['title'] ) . '</a>';
+			}
+			$result .= '</h2>';
+		}
+		return $result;
+	}
+
 	public static function render_archive_page() {
 		if ( ! current_user_can( 'install_plugins' ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
@@ -277,28 +299,13 @@ class HackRepair_Plugin_Archiver {
 			),
 		);
 
-		// Function to generate tab navigation
-		function generate_tabs( $tabs, $current = 'archive' ) {
-			$result = '';
-			if ( count( $tabs ) ) {
-				$result = "      <h2 class=\"nav-tab-wrapper\">\r\n";
-				foreach ( $tabs as $tab_key => $tab ) {
-					if ( $tab_key === $current ) {
-						$tab['class'] .= ' nav-tab-active';
-					}
-					$result .= "        <a class=\"nav-tab{$tab['class']}\" href=\"{$tab['href']}\">{$tab['title']}</a>\r\n";
-				}
-				$result .= "      </h2>\r\n";
-			}
-			return $result;
-		}
-
 		$list_table = new WP_Plugins_Archive_List_Table();
 		$list_table->prepare_items();
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'Archived Plugins', 'hackrepair-plugin-archiver' ); ?></h1>
-			<?php echo generate_tabs( $tabs, 'archive' ); ?>
+			<?php HackRepair_Plugin_Archiver_Security::render_notices( self::$options['archive_dir'] ); ?>
+			<?php echo self::generate_tabs( $tabs, 'archive' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in generate_tabs(). ?>
 			<form method="post" action="<?php echo esc_url( admin_url( 'plugins.php?page=hackrepair-plugin-archiver' ) ); ?>">
 				<?php wp_nonce_field( 'bulk-plugins' ); ?>
 				<?php $list_table->views(); ?>
@@ -437,6 +444,7 @@ class HackRepair_Plugin_Archiver {
 		if ( ! current_user_can( 'install_plugins' ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
+		self::require_file_mods();
 
 		if ( isset( $_REQUEST['action'] ) && isset( $_REQUEST['_wpnonce'] ) ) {
 			if ( ! wp_verify_nonce( $_REQUEST['_wpnonce'], 'bulk-plugins' ) ) {
@@ -508,11 +516,11 @@ class HackRepair_Plugin_Archiver {
 		$this_plugin     = plugin_basename( __FILE__ );
 
 		if ( ! in_array( $context, $exclude_context, true ) && ( $plugin_file !== $this_plugin ) && ( 'hackrepair-plugin-archiver' !== $page ) ) {
-			if ( current_user_can( 'install_plugins' ) ) {
+			if ( current_user_can( 'install_plugins' ) && HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
 				$actions['archive'] = '<a href="' . esc_url( wp_nonce_url( 'plugins.php?action=archive-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ), 'bulk-plugins' ) ) . '" aria-label="' . esc_attr( sprintf( __( 'Archive %s', 'hackrepair-plugin-archiver' ), esc_html( $plugin_data['Name'] ) ) ) . '">' . esc_html__( 'Archive', 'hackrepair-plugin-archiver' ) . '</a>';
 			}
 		} elseif ( $plugin_file === $this_plugin && 'hackrepair-plugin-archiver' !== $page ) {
-			if ( current_user_can( 'install_plugins' ) ) {
+			if ( current_user_can( 'install_plugins' ) && HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
 				$actions['restore-all'] = '<a href="' . esc_url( wp_nonce_url( 'plugins.php?page=hackrepair-plugin-archiver&action=restore-selected&all=true', 'bulk-plugins' ) ) . '" aria-label="' . esc_attr( __( 'Unarchive all archived plugins', 'hackrepair-plugin-archiver' ) ) . '">' . esc_html__( 'Unarchive All', 'hackrepair-plugin-archiver' ) . '</a>';
 			}
 		}
@@ -535,6 +543,7 @@ class HackRepair_Plugin_Archiver {
 		if ( ! current_user_can( 'install_plugins' ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
+		self::require_file_mods();
 
 		global $wp_filesystem;
 		$form_fields = $_REQUEST;
@@ -548,9 +557,7 @@ class HackRepair_Plugin_Archiver {
 		if ( $creds ) {
 			WP_Filesystem( $creds );
 			// Sanitize archive directory
-			$archive_dir_name = sanitize_file_name( self::$options['archive_dir'] );
-			$archive_dir      = trailingslashit( $wp_filesystem->wp_content_dir() . $archive_dir_name );
-			$wp_filesystem->mkdir( $archive_dir );
+			$archive_dir = self::prepare_archive_dir();
 			$count = 0;
 			// Validate that checked is an array
 			$checked_plugins = isset( $_REQUEST['checked'] ) && is_array( $_REQUEST['checked'] ) ? $_REQUEST['checked'] : array();
@@ -588,6 +595,7 @@ class HackRepair_Plugin_Archiver {
 		if ( ! current_user_can( 'install_plugins' ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
+		self::require_file_mods();
 
 		global $wp_filesystem;
 		$form_fields = $_REQUEST;
@@ -601,9 +609,7 @@ class HackRepair_Plugin_Archiver {
 		if ( $creds ) {
 			WP_Filesystem( $creds );
 			// Sanitize archive directory
-			$archive_dir_name = sanitize_file_name( self::$options['archive_dir'] );
-			$archive_dir      = trailingslashit( $wp_filesystem->wp_content_dir() . $archive_dir_name );
-			$wp_filesystem->mkdir( $archive_dir );
+			$archive_dir = self::prepare_archive_dir();
 			$count = 0;
 			if ( isset( $_REQUEST['all'] ) && $_REQUEST['all'] ) {
 				$plugins  = self::get_archived_plugins();
@@ -635,6 +641,9 @@ class HackRepair_Plugin_Archiver {
 				if ( strpos( $norm_target_dir, $norm_wp_plugin_dir ) !== 0 ) {
 					continue;
 				}
+					if ( $wp_filesystem->exists( $target_dir ) ) {
+						continue; // Never overwrite a plugin that is already installed.
+					}
 					$result = $wp_filesystem->move( $plugin_dir, $target_dir );
 				if ( $result ) {
 					++$count;
@@ -658,6 +667,7 @@ class HackRepair_Plugin_Archiver {
 		if ( ! current_user_can( 'install_plugins' ) ) {
 			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
+		self::require_file_mods();
 
 		global $wp_filesystem;
 		$plugins = get_plugins();
@@ -673,9 +683,7 @@ class HackRepair_Plugin_Archiver {
 		if ( $creds ) {
 			WP_Filesystem( $creds );
 			// Sanitize archive directory
-			$archive_dir_name = sanitize_file_name( self::$options['archive_dir'] );
-			$archive_dir      = trailingslashit( $wp_filesystem->wp_content_dir() . $archive_dir_name );
-			$wp_filesystem->mkdir( $archive_dir );
+			$archive_dir = self::prepare_archive_dir();
 			$count = 0;
 			// Validate that checked is an array
 			$checked_plugins = is_array( $checked ) ? $checked : ( isset( $_REQUEST['checked'] ) && is_array( $_REQUEST['checked'] ) ? wp_unslash( $_REQUEST['checked'] ) : array() );
@@ -704,6 +712,9 @@ class HackRepair_Plugin_Archiver {
 					if ( ! $real_plugin_dir || strpos( wp_normalize_path( $real_plugin_dir ), $norm_wp_plugin_dir ) !== 0 ) {
 						continue;
 					}
+					if ( $wp_filesystem->exists( $target_dir ) ) {
+						continue; // Never overwrite a plugin that is already in the archive.
+					}
 					if ( self::$options['deactivate'] ) {
 						deactivate_plugins( $plugin );
 					}
@@ -727,6 +738,34 @@ class HackRepair_Plugin_Archiver {
 	}
 
 	// utility functions
+
+	/**
+	 * Make sure the active archive exists, is registered and is protected.
+	 * Uses the filesystem object that already has credentials.
+	 *
+	 * @return string Filesystem-API path of the archive, with trailing slash.
+	 */
+	private static function prepare_archive_dir() {
+		global $wp_filesystem;
+		$name = HackRepair_Plugin_Archiver_Security::active_name( self::$options['archive_dir'] );
+		if ( ! HackRepair_Plugin_Archiver_Security::is_registered( $name ) ) {
+			HackRepair_Plugin_Archiver_Security::register( $name, HackRepair_Plugin_Archiver_Security::derived_label( $name ), ! HackRepair_Plugin_Archiver_Security::is_random_name( $name ) );
+		}
+		$archive_dir = trailingslashit( $wp_filesystem->wp_content_dir() . $name );
+		$wp_filesystem->mkdir( $archive_dir );
+		HackRepair_Plugin_Archiver_Security::protect( $archive_dir );
+		return $archive_dir;
+	}
+
+	/**
+	 * Stop when file changes are disabled (DISALLOW_FILE_MODS).
+	 */
+	private static function require_file_mods() {
+		if ( ! HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
+			wp_die( esc_html__( 'File changes are disabled on this site (DISALLOW_FILE_MODS), so plugins cannot be archived, restored or deleted here.', 'hackrepair-plugin-archiver' ) );
+		}
+	}
+
 	private static function plugin_basename( $plugin, $base = '' ) {
 		$dir = basename( $plugin );
 		if ( $dir === $plugin ) {

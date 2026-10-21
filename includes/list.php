@@ -47,10 +47,6 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		return array( 'widefat', $this->_args['plural'] );
 	}
 
-	// public function ajax_user_can() {
-	// return false current_user_can('activate_plugins');
-	// }
-
 	public function prepare_items() {
 		global $status, $plugins, $totals, $page, $orderby, $order, $s;
 
@@ -76,9 +72,14 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		if ( isset( $_REQUEST['archive_dir'] ) ) {
 			// Sanitize incoming archive_dir parameter before using it
 			$archive_dir = sanitize_file_name( wp_unslash( $_REQUEST['archive_dir'] ) );
-			$dir         = WP_CONTENT_DIR . '/' . $archive_dir;
-			HackRepair_Plugin_Archiver::$options['archive_dir'] = $archive_dir;
-			update_option( 'hackrepair-plugin-archiver_options', HackRepair_Plugin_Archiver::$options );
+			// Only archives we know about can be selected.
+			if ( HackRepair_Plugin_Archiver_Security::is_registered( $archive_dir ) ) {
+				$dir = WP_CONTENT_DIR . '/' . $archive_dir;
+				if ( HackRepair_Plugin_Archiver::$options['archive_dir'] !== $archive_dir ) {
+					HackRepair_Plugin_Archiver::$options['archive_dir'] = $archive_dir;
+					update_option( 'hackrepair-plugin-archiver_options', HackRepair_Plugin_Archiver::$options );
+				}
+			}
 		}
 		$all_plugins = HackRepair_Plugin_Archiver::get_archived_plugins( $dir );
 		$wprocket    = isset( $all_plugins['wp-rocket/wp-rocket.php'] );
@@ -91,47 +92,6 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		);
 
 		$screen = $this->screen;
-
-		// set_transient( 'plugin_slugs', array_keys( $plugins['all'] ), DAY_IN_SECONDS );
-
-		// foreach ( (array) $plugins['all'] as $plugin_file => $plugin_data ) {
-		// Extra info if known. array_merge() ensures $plugin_data has precedence if keys collide.
-		// if ( isset( $plugin_info->response[ $plugin_file ] ) ) {
-		// $plugins['all'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->response[ $plugin_file ], $plugin_data );
-		// Make sure that $plugins['upgrade'] also receives the extra info since it is used on ?plugin_status=upgrade
-		// if ( isset( $plugins['upgrade'][ $plugin_file ] ) ) {
-		// $plugins['upgrade'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->response[ $plugin_file ], $plugin_data );
-		// }
-
-		// } elseif ( isset( $plugin_info->no_update[ $plugin_file ] ) ) {
-		// $plugins['all'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->no_update[ $plugin_file ], $plugin_data );
-		// Make sure that $plugins['upgrade'] also receives the extra info since it is used on ?plugin_status=upgrade
-		// if ( isset( $plugins['upgrade'][ $plugin_file ] ) ) {
-		// $plugins['upgrade'][ $plugin_file ] = $plugin_data = array_merge( (array) $plugin_info->no_update[ $plugin_file ], $plugin_data );
-		// }
-		// }
-
-		// Filter into individual sections
-		// if ( is_multisite() && ! $screen->in_admin( 'network' ) && is_network_only_plugin( $plugin_file ) && ! is_plugin_active( $plugin_file ) ) {
-		// On the non-network screen, filter out network-only plugins as long as they're not individually activated
-		// unset( $plugins['all'][ $plugin_file ] );
-		// } elseif ( ! $screen->in_admin( 'network' ) && is_plugin_active_for_network( $plugin_file ) ) {
-		// On the non-network screen, filter out network activated plugins
-		// unset( $plugins['all'][ $plugin_file ] );
-		// } elseif ( ( ! $screen->in_admin( 'network' ) && is_plugin_active( $plugin_file ) )
-		// || ( $screen->in_admin( 'network' ) && is_plugin_active_for_network( $plugin_file ) ) ) {
-		// On the non-network screen, populate the active list with plugins that are individually activated
-		// On the network-admin screen, populate the active list with plugins that are network activated
-		// $plugins['active'][ $plugin_file ] = $plugin_data;
-		// } else {
-		// if ( ! $screen->in_admin( 'network' ) && isset( $recently_activated[ $plugin_file ] ) ) {
-		// On the non-network screen, populate the recently activated list with plugins that have been recently activated
-		// $plugins['recently_activated'][ $plugin_file ] = $plugin_data;
-		// }
-		// Populate the inactive list with plugins that aren't activated
-		// $plugins['inactive'][ $plugin_file ] = $plugin_data;
-		// }
-		// }
 
 		if ( $s ) {
 			$status            = 'search';
@@ -249,16 +209,10 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		$screen       = $this->screen;
 		$status_links = array();
 		$dirs         = HackRepair_Plugin_Archiver::get_archive_dirs();
-		foreach ( $dirs as $dir ) {
-			$key     = $dir;
-			$name    = preg_replace( '/^plugins\-/ims', '', $dir );
-			$name    = str_replace( '-', ' ', $name );
-			$name[0] = strtoupper( $name[0] );
-			$count   = HackRepair_Plugin_Archiver::get_archived_plugins( WP_CONTENT_DIR . '/' . $dir );
-			$count   = count( $count );
-			// if ( 1 > $count ) {
-			// continue;
-			// }
+		foreach ( $dirs as $dir => $name ) {
+			$key   = $dir;
+			$count = HackRepair_Plugin_Archiver::get_archived_plugins( WP_CONTENT_DIR . '/' . $dir );
+			$count = count( $count );
 			$link = '<a href="%s" %s>%s%s</a>';
 			$href = admin_url( 'plugins.php?page=hackrepair-plugin-archiver' );
 			if ( $dir !== HackRepair_Plugin_Archiver::$options['archive_dir'] ) {
@@ -276,6 +230,9 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	}
 
 	protected function get_bulk_actions() {
+		if ( ! HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
+			return array();
+		}
 		$actions = array(
 			'restore-selected' => __( 'Unarchive', 'hackrepair-plugin-archiver' ),
 			'remove-selected'  => __( 'Delete', 'hackrepair-plugin-archiver' ),
@@ -305,6 +262,9 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 	 */
 	protected function extra_tablenav( $which ) {
 		global $status;
+		if ( ! HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
+			return;
+		}
 		echo '<div class="alignleft actions" style="margin-top:1px;">
 		    <a class="button action" href="' . esc_url( wp_nonce_url( admin_url( 'plugins.php?page=hackrepair-plugin-archiver&action=restore-selected&all=true' ), 'bulk-plugins' ) ) . '">' . __( 'Unarchive All', 'hackrepair-plugin-archiver' ) . '</a>
 		  </div>';
@@ -320,9 +280,6 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 
 	public function display_rows() {
 		global $status;
-
-		// if ( is_multisite() && ! $this->screen->in_admin( 'network' ) && in_array( $status, array( 'mustuse', 'dropins' ) ) )
-		// return;
 
 		foreach ( $this->items as $plugin_file => $plugin_data ) {
 			$this->single_row( array( $plugin_file, $plugin_data ) );
@@ -345,7 +302,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 
 		// Pre-order.
 		$actions = array();
-		if ( current_user_can( 'install_plugins' ) ) {
+		if ( current_user_can( 'install_plugins' ) && HackRepair_Plugin_Archiver_Security::file_mods_allowed() ) {
 			$restore_url        = wp_nonce_url( 'plugins.php?page=hackrepair-plugin-archiver&action=restore-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ) . '&paged=' . intval( $page ) . '&s=' . rawurlencode( $s ), 'bulk-plugins' );
 			$remove_url         = wp_nonce_url( 'plugins.php?page=hackrepair-plugin-archiver&action=remove-selected&checked%5B0%5D=' . rawurlencode( $plugin_file ) . '&paged=' . intval( $page ) . '&s=' . rawurlencode( $s ), 'bulk-plugins' );
 			$actions['restore'] = '<a href="' . esc_url( $restore_url ) . '" title="' . esc_attr__( 'Unarchive this plugin', 'hackrepair-plugin-archiver' ) . '">' . esc_html__( 'Unarchive', 'hackrepair-plugin-archiver' ) . '</a>';

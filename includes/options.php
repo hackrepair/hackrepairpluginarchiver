@@ -72,7 +72,7 @@ class HackRepair_Plugin_Archiver_Options {
 			foreach ( $items as $key => $item ) {
 				$key      = esc_attr( $key );
 				$selected = selected( $key, HackRepair_Plugin_Archiver::$options[ $args['option_id'] ], false );
-				echo "<option value='{$key}' $selected>$item</option>";
+				echo "<option value='{$key}' $selected>" . esc_html( $item ) . '</option>';
 			}
 		} else {
 			foreach ( $items as $item ) {
@@ -120,7 +120,7 @@ class HackRepair_Plugin_Archiver_Options {
 			$args['size'] = 40;
 		}
 		$description = isset( $args['description'] ) ? "<p class=\"description\">{$args['description']}</p>" : '';
-		echo "<code>WP_CONTENT_DIR/plugins-</code> <input id='{$args['option_id']}' name='" . self::$id . "[{$args['option_id']}]' size='{$args['size']}' type='text' value='" . esc_attr( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) . "' />{$description}";
+		echo "<input id='{$args['option_id']}' name='" . self::$id . "[{$args['option_id']}]' size='{$args['size']}' type='text' value='" . esc_attr( HackRepair_Plugin_Archiver::$options[ $args['option_id'] ] ) . "' />{$description}";
 	}
 
 	// NUMBER TEXTBOX - Name: text - Arguments: size:int=40
@@ -234,8 +234,12 @@ class HackRepair_Plugin_Archiver_Options {
 		$default = array_keys( self::$tabs );
 		$default = array_shift( $default );
 		$current = isset( $_REQUEST['tab'] ) ? sanitize_key( wp_unslash( $_REQUEST['tab'] ) ) : $default;
+		HackRepair_Plugin_Archiver_Security::render_notices( HackRepair_Plugin_Archiver::$options['archive_dir'] );
 		echo self::tabs( $current );
 		call_user_func( self::content( $current ) );
+		if ( 'settings' === $current ) {
+			HackRepair_Plugin_Archiver_Security::render_panel();
+		}
 		?>
 	</div>
 		<?php
@@ -249,10 +253,19 @@ class HackRepair_Plugin_Archiver_Options {
 		}
 
 		if ( isset( $input['archive_dir_add'] ) && $input['archive_dir_add'] ) {
-			$input['archive_dir_add'] = sanitize_title( $input['archive_dir_add'] );
-			// Create the directory safely; wp_mkdir_p already sanitizes, but ensure path composition is safe.
-			wp_mkdir_p( WP_CONTENT_DIR . '/plugins-' . $input['archive_dir_add'] );
+			$label = sanitize_text_field( $input['archive_dir_add'] );
+			if ( ! current_user_can( 'install_plugins' ) ) {
+				$created = false;
+			} else {
+				$created = HackRepair_Plugin_Archiver_Security::create_archive( $label );
+			}
+			if ( ! $created ) {
+				add_settings_error( 'hackrepair-plugin-archiver_options', 'archive_create_failed', __( 'The new archive could not be created. File changes may be disabled, or the server needs file credentials.', 'hackrepair-plugin-archiver' ), 'error' );
+			}
 			$input['archive_dir_add'] = '';
+			if ( isset( $input['archive_dir'] ) && ! HackRepair_Plugin_Archiver_Security::is_registered( sanitize_file_name( $input['archive_dir'] ) ) ) {
+				$input['archive_dir'] = HackRepair_Plugin_Archiver::$options['archive_dir'];
+			}
 		}
 		return $input; // return validated input
 	}

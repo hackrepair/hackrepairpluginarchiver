@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/branding/thrg-heart-animated.gif" alt="The Hack Repair Guy heart and wrench logo" width="144" height="144">
+  <img src=".wordpress-org/banner-772x250.png" alt="The Hack Repair Guy's Plugin Archiver" width="772" height="250">
 </p>
 
 <h1 align="center">The Hack Repair Guy's Plugin Archiver</h1>
@@ -8,7 +8,7 @@ Disable plugins without deleting them. Archive any plugin in one click, restore 
 
 Sites collect plugins that are switched off but not quite ready to be deleted: something you are testing, a tool you use twice a year, a plugin that broke the site and that nobody should click Activate on again. Plugin Archiver moves the plugin's files out of `wp-content/plugins` into a separate archive folder. WordPress stops listing it, so it cannot be activated by accident, but nothing is deleted and its settings stay in the database.
 
-Current release: **3.1.2**. See [release notes](releases/v3.1.2.md).
+Current release: **3.2.0**. See [release notes](releases/v3.2.0.md).
 
 ## What it does
 
@@ -24,12 +24,20 @@ Current release: **3.1.2**. See [release notes](releases/v3.1.2.md).
 
 - Auto-deactivate before archiving (recommended, on by default)
 - Several archive folders, and which one is active
+- Archive folder protection: whether each folder is blocked from the web, with **Check again** and **Secure this archive**
+
+**Safer by default (3.2.0):**
+
+- **Random archive folder names.** New archives are named like `plugins-archive-k3x9a7q2m5zt`, so the location cannot be guessed. Archives made by earlier versions are found automatically and kept as they are; **Secure this archive** renames one to a random name.
+- **Blocked from the web.** Every archive folder gets deny rules for Apache (`.htaccess`, 2.2 and 2.4), IIS (`web.config`) and an `index.php`. The plugin requests a small marker file from your own site to confirm the rules work, warns you on screen if the folder can be read, and adds a **Site Health** test. On nginx, add `location ^~ /wp-content/<folder> { deny all; }` (the warning shows the exact line).
+- **`DISALLOW_FILE_MODS` respected.** When a site turns off file changes, the Archive links, bulk actions and restore/delete buttons are hidden and the lists are read-only.
+- **Nothing is overwritten.** Archiving or restoring is skipped if a plugin with the same folder name is already at the destination.
 
 Archiving moves files only. A plugin's saved settings and data stay where they were, so a restored plugin comes back configured.
 
 ## Privacy and scope
 
-The plugin makes no outside requests, sends nothing about your site anywhere, and adds nothing to the public side of your site. It uses the WordPress Filesystem API and checks capabilities and nonces on every action. Archived plugins stay on your server in the archive folder until you restore or delete them.
+The plugin sends nothing about your site anywhere and adds nothing to the public side of your site. Its only network request goes to your own site: an occasional check (at most every 12 hours, or when you press Check again) that the archive folder cannot be read from the web. It uses the WordPress Filesystem API and checks capabilities and nonces on every action. Archived plugins stay on your server in the archive folder until you restore or delete them.
 
 It is not a backup tool, a malware scanner or a plugin manager. Archiving removes a plugin from WordPress's view; it does not make a vulnerable plugin safe to keep on disk. If you archive a plugin because it is compromised or abandoned, delete it from the archive when you are done with it.
 
@@ -39,21 +47,9 @@ Install from **Plugins → Add New** (search for "The Hack Repair Guy's Plugin A
 
 Updates come from WordPress.org. This repository is the source and history of the plugin.
 
-## Development
-
-Requires WordPress 6.6+ and PHP 7.4+. Tests are plain scripts:
-
-```
-python3 tests/package-permissions.py
-```
-
-Run shared PHPCS with `/Volumes/BACKUP8TB2/plugins/PHPCS/run-phpcs.sh "$PWD"`. Build a ZIP with `python3 scripts/build-release.py` (writes to `dist/`).
-
-See [PROJECT.md](PROJECT.md "Architecture, release process, design decisions and known limits") for the architecture, the WordPress.org release process and known limits.
-
 ## Author and support
 
-**[Jim Walker](https://hackrepair.com/)** — The Hack Repair Guy — author and maintainer.
+**[Jim Walker](https://hackrepair.com/)** — The Hack Repair Guy — author and maintainer. Developer notes: [PROJECT.md](PROJECT.md "Architecture, release process, design decisions and known limits").
 
 [Questions and help](https://wordpress.org/support/plugin/hackrepair-plugin-archiver/ "Plugin Archiver support forum on WordPress.org") · [Report a bug](https://github.com/hackrepair/hackrepairpluginarchiver/issues) · [Security reporting](mailto:jim%40hackrepair%2Ecom) · [Buy Jim a coffee](https://hackrepair.com/donations/buy-jim-a-coffee)
 

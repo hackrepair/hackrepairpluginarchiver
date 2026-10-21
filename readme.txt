@@ -5,7 +5,7 @@ Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 6.6
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 3.1.2
+Stable tag: 3.2.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Support link: https://wordpress.org/support/plugin/hackrepair-plugin-archiver/
@@ -26,9 +26,13 @@ Archive any plugin with one click. Archived plugins are hidden from your Plugins
 - “Unarchive All” button on the Archived Plugins tab
 - Non‑destructive: archiving does not remove a plugin’s settings/data
 - Uses the built‑in WordPress Filesystem API with capability and nonce checks
+- Random archive folder names, so the archive location cannot be guessed
+- Archive folders are blocked from the web (Apache, IIS and an index file), with a self-check and a Site Health test
+- Respects DISALLOW_FILE_MODS: archiving, restoring and deleting are turned off when file changes are disabled
+- Never overwrites a plugin that already exists at the destination
 
 = How it works =
-- When you Archive a plugin, its folder is moved from wp-content/plugins to your chosen archive directory (e.g., wp-content/plugins-archive-xxxxxx).
+- When you Archive a plugin, its folder is moved from wp-content/plugins to your chosen archive directory (e.g., wp-content/plugins-archive-k3x9a7q2m5zt).
 - Archived plugins are removed from the Plugins list, so they can’t be accidentally activated.
 - You may switch the active archive directory or create new ones in Settings → Plugin Archiver.
 
@@ -53,7 +57,19 @@ No. The Plugin Archiver supports multiple archive directories; since duplicates 
 Some plugins remove their settings/data on deletion. Archiving keeps everything intact so you can restore later without reconfiguration.
 
 = Where are archived plugins stored? =
-By default in wp-content/plugins-[name] (e.g., plugins-archive-xxxxxx). You can create and switch archives in Settings → Plugin Archiver.
+In a folder inside wp-content with a random name, such as plugins-archive-k3x9a7q2m5zt. Archives made by earlier versions keep their old names until you choose Secure this archive in Settings. You can create and switch archives in Settings → Plugin Archiver.
+
+= Can someone download my archived plugins from the web? =
+Each archive folder contains rules that tell the web server to refuse all requests (.htaccess for Apache 2.2 and 2.4, web.config for IIS) and an index.php. The plugin checks that the rules work by requesting a small marker file from your own site, and warns you on screen and in Site Health if it can be read. Nginx ignores .htaccess; add: location ^~ /wp-content/your-archive-folder { deny all; } (the warning shows your exact folder name).
+
+= What does the plugin request from my own site? =
+One request to the marker file inside your archive folder, at most every 12 hours or when you press Check again. Nothing is sent to any other site.
+
+= What happens if my site sets DISALLOW_FILE_MODS? =
+Archiving, restoring and deleting are turned off, the Archive links and bulk actions are hidden, and the lists stay visible.
+
+= I upgraded and my archive folder has an old, predictable name. =
+It keeps working. Open Settings → Plugin Archiver and choose Secure this archive to rename it to a random name.
 
 = Does archiving delete plugin data? =
 No. Archiving only moves plugin files.
@@ -80,6 +96,14 @@ No. Archiving only moves plugin files.
 3. Settings screen with archive directory controls
 
 == Changelog ==
+
+= 3.2.0 =
+- New archive folders get random names (for example plugins-archive-k3x9a7q2m5zt); archives from earlier versions are registered automatically and can be renamed with Secure this archive
+- Archive folders are blocked from the web with .htaccess (Apache 2.2 and 2.4), web.config and index.php, rewritten if missing; a self-check warns if a folder can still be read, and a Site Health test reports it
+- Archiving, restoring and deleting honor DISALLOW_FILE_MODS
+- Archiving and restoring never overwrite an existing plugin at the destination
+- Only registered archives can be selected on the Archived Plugins screen
+- Code cleanup: removed unused commented-out code; tab navigation output is escaped
 
 = 3.1.2 =
 - Code-style cleanups: strict comparisons and consistent formatting; no behavior change
