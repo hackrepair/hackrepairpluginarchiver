@@ -1,7 +1,7 @@
 === The Hack Repair Guy's Plugin Archiver ===
 Contributors: hackrepair, tvcnet
 Tags: archive, plugins, deactivate, plugin manager, security
-Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
+Donate link: https://hackrepair.com/donations/buy-jim-a-coffee
 Requires at least: 6.6
 Tested up to: 6.8.2
 Requires PHP: 7.4

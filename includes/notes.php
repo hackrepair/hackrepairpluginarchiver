@@ -47,6 +47,6 @@ By default in <code>wp-content/plugins-…</code>. You can create and switch arc
 <a href="https://hackrepair.com/about/hackrepair-plugin-archiver" target="_blank" rel="noopener noreferrer">Usage guide and video</a></p>
 
 <p><strong>Like it?</strong><br>
-Please consider a small donation: <a href="https://hackrepair.com/about/hackrepair-plugin-archiver" target="_blank" rel="noopener noreferrer">Donate</a>.</p>
+Please consider a small donation: <a href="https://hackrepair.com/donations/buy-jim-a-coffee" target="_blank" rel="noopener noreferrer">Donate</a>.</p>
 
 <p><strong>Enjoy!</strong></p>
