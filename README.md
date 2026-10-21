@@ -47,6 +47,14 @@ Install from **Plugins → Add New** (search for "The Hack Repair Guy's Plugin A
 
 Updates come from WordPress.org. This repository is the source and history of the plugin.
 
+## More from The Hack Repair Guy
+
+- [Site Inspector](https://github.com/hackrepair/thrg-site-inspector "Read-only security checks with report history")
+- [Plugin Detective](https://github.com/hackrepair/hackrepair-plugin-detective "Find the plugin that broke your site")
+- [Disable Other Plugin Notices](https://github.com/hackrepair/disable-other-plugin-notices "Group other plugins' admin notices into one panel")
+- [Group Password Reset](https://github.com/hackrepair/group-password-reset "Bulk reset passwords and send secure reset links")
+- [Admin Login Notifier](https://github.com/hackrepair/hackrepair-admin-login-notifier "Get told when an Administrator logs in")
+
 ## Author and support
 
 **[Jim Walker](https://hackrepair.com/)** — The Hack Repair Guy — author and maintainer. Developer notes: [PROJECT.md](PROJECT.md "Architecture, release process, design decisions and known limits").

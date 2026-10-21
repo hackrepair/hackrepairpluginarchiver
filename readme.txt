@@ -43,8 +43,11 @@ Plugin Archiver is not a backup tool, a malware scanner or a plugin manager. Arc
 
 = Other Hack Repair Guy plugins =
 
-* [Site Inspector](https://github.com/hackrepair/thrg-site-inspector "Site Inspector on GitHub") keeps a history of read-only security checks for your site.
-* [Plugin Detective](https://github.com/hackrepair/hackrepair-plugin-detective "Plugin Detective on GitHub") helps find the plugin behind a problem.
+* [Site Inspector](https://github.com/hackrepair/thrg-site-inspector "Site Inspector on GitHub") keeps a history of read-only security checks, so you can see what is new and what is fixed.
+* [Plugin Detective](https://github.com/hackrepair/hackrepair-plugin-detective "Plugin Detective on GitHub") finds the plugin that broke your site in a few quick checks, even when wp-admin is down.
+* [Disable Other Plugin Notices](https://github.com/hackrepair/disable-other-plugin-notices "Disable Other Plugin Notices on GitHub") groups notices from other plugins and themes into one collapsed panel.
+* [Group Password Reset](https://github.com/hackrepair/group-password-reset "Group Password Reset on GitHub") lets administrators bulk reset passwords and send secure reset links.
+* [Admin Login Notifier](https://github.com/hackrepair/hackrepair-admin-login-notifier "Admin Login Notifier on GitHub") tells you the moment an Administrator logs in to your dashboard.
 
 = Credits =
 
