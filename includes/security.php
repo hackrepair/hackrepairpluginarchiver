@@ -673,7 +673,7 @@ class HackRepair_Plugin_Archiver_Security {
 			case 'protected':
 				return __( 'Protected', 'hackrepair-plugin-archiver' );
 			default:
-				return __( 'Not checked', 'hackrepair-plugin-archiver' );
+				return __( 'Could not be checked from this server', 'hackrepair-plugin-archiver' );
 		}
 	}
 

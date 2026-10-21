@@ -8,39 +8,47 @@ Requires PHP: 7.4
 Stable tag: 3.2.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
-Support link: https://wordpress.org/support/plugin/hackrepair-plugin-archiver/
+Support link: https://github.com/hackrepair/hackrepairpluginarchiver/discussions
 
-Disable Plugins Without Deleting — Archive and Restore in One Click
+Disable plugins without deleting them. Archive in one click, restore any time, and keep the archive hidden and blocked from the web.
 
 == Description ==
 
-Archive any plugin with one click. Archived plugins are hidden from your Plugins list and safely moved out of wp-content/plugins into a dedicated archive directory for easy restore later. Ideal for preventing accidental re-activation, testing different plugin sets, and keeping occasional-use tools out of sight until needed.
+Plugins you switch off but never delete pile up, and one day somebody clicks Activate on the one that broke the site, or the one that was hacked. Plugin Archiver moves a plugin's files out of wp-content/plugins into a separate archive folder. WordPress stops listing it, so it cannot be activated by accident, but nothing is deleted and its settings stay in the database. Restore it whenever you want, configured as you left it.
 
 [youtube https://www.youtube.com/watch?v=i_Gn22bWLVs]
 
-= Features =
-- One‑click Archive link on the Plugins screen
-- Bulk Archive / Unarchive / Delete actions
-- Optional auto‑deactivate before archiving (recommended)
-- Manage multiple archive directories and switch between them
-- “Unarchive All” button on the Archived Plugins tab
-- Non‑destructive: archiving does not remove a plugin’s settings/data
-- Uses the built‑in WordPress Filesystem API with capability and nonce checks
-- Random archive folder names, so the archive location cannot be guessed
-- Archive folders are blocked from the web (Apache, IIS and an index file), with a self-check and a Site Health test
-- Respects DISALLOW_FILE_MODS: archiving, restoring and deleting are turned off when file changes are disabled
-- Never overwrites a plugin that already exists at the destination
+Under **Plugins > Installed Plugins** every plugin gets an **Archive** link, and Archive joins the bulk actions. Under **Plugins > Archived Plugins** you can:
 
-= How it works =
-- When you Archive a plugin, its folder is moved from wp-content/plugins to your chosen archive directory (e.g., wp-content/plugins-archive-k3x9a7q2m5zt).
-- Archived plugins are removed from the Plugins list, so they can’t be accidentally activated.
-- You may switch the active archive directory or create new ones in Settings → Plugin Archiver.
+* Restore a plugin to wp-content/plugins, one at a time or in bulk
+* Delete a plugin's files from the archive, one at a time or in bulk
+* Unarchive all at once
+* Switch between several archive folders
 
-= Common use cases =
-- Maintain a “toolbox” of favorite utilities you don’t need to see every day
-- Quarantine buggy or compromised plugins to avoid accidental activation
-- Test different plugin stacks by pulling sets into and out of the archive
-- Share management with others while reducing “oops, I clicked Activate” incidents
+**Archives are hard to find.** New archive folders get random names such as plugins-archive-k3x9a7q2m5zt, so the location cannot be guessed. Archives made by earlier versions keep working, and one click on **Secure this archive** gives them a random name.
+
+**Archives are blocked from the web.** Every archive folder gets deny rules for Apache (2.2 and 2.4) and IIS plus an index file, rewritten if they go missing. The plugin checks that they work by requesting a small marker file from your own site, warns you on screen if a folder can still be read, and adds a test to Site Health. Archived plugins are often old and sometimes vulnerable, so they should never be downloadable.
+
+**Respects locked-down sites.** If your site sets DISALLOW_FILE_MODS, archiving, restoring and deleting are turned off and the lists are read-only. The plugin never overwrites a plugin that already exists at the destination.
+
+Good for preventing accidental re-activation, quarantining a buggy or compromised plugin, testing different plugin sets, and keeping occasional-use tools out of sight until needed.
+
+= Privacy =
+
+The plugin sends nothing about your site anywhere and adds nothing to the public side of your site. Its one network request goes to your own site: a check that the archive folder cannot be read from the web, made at most every 12 hours or when you press Check again. It uses the WordPress Filesystem API and checks capabilities and nonces on every action. Archived plugins stay on your server until you restore or delete them.
+
+= What it is not =
+
+Plugin Archiver is not a backup tool, a malware scanner or a plugin manager. Archiving removes a plugin from WordPress's view; it does not make a vulnerable plugin safe to keep on disk. If you archive a plugin because it is compromised or abandoned, delete it from the archive when you are done. If you want a deeper look at a site, [The Hack Repair Guy](https://hackrepair.com/ "The Hack Repair Guy: WordPress security and hack repair") can help.
+
+= Other Hack Repair Guy plugins =
+
+* [Site Inspector](https://github.com/hackrepair/thrg-site-inspector "Site Inspector on GitHub") keeps a history of read-only security checks for your site.
+* [Plugin Detective](https://github.com/hackrepair/hackrepair-plugin-detective "Plugin Detective on GitHub") helps find the plugin behind a problem.
+
+= Credits =
+
+Created and maintained by [Jim Walker](https://hackrepair.com/ "Jim Walker, The Hack Repair Guy"). Source and history: [hackrepair/hackrepairpluginarchiver](https://github.com/hackrepair/hackrepairpluginarchiver "Plugin Archiver source on GitHub").
 
 == Frequently Asked Questions ==
 
@@ -90,6 +98,19 @@ No. Archiving only moves plugin files.
 2. Manage archived plugins at Plugins → Archived Plugins, or via Settings → Plugin Archiver → Archived Plugins.
 3. Use “Unarchive” to restore a plugin to wp-content/plugins. Use “Delete” to remove it from the archive.
 
+== Support ==
+
+For questions, ideas and community support, visit GitHub Discussions:
+https://github.com/hackrepair/hackrepairpluginarchiver/discussions
+
+The WordPress.org support forum is also monitored:
+https://wordpress.org/support/plugin/hackrepair-plugin-archiver/
+
+Report reproducible bugs through Issues:
+https://github.com/hackrepair/hackrepairpluginarchiver/issues
+
+Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not include credentials or sensitive site information in public posts.
+
 == Screenshots ==
 1. Archive action on the Plugins screen
 2. Archived Plugins list with bulk actions
@@ -104,6 +125,7 @@ No. Archiving only moves plugin files.
 - Archiving and restoring never overwrite an existing plugin at the destination
 - Only registered archives can be selected on the Archived Plugins screen
 - Code cleanup: removed unused commented-out code; tab navigation output is escaped
+- Readme restructured to match the Hack Repair Guy plugin standard: plain-language description, Privacy, What it is not, Support (GitHub Discussions, Issues, private security contact), Credits and tooltip links
 
 = 3.1.2 =
 - Code-style cleanups: strict comparisons and consistent formatting; no behavior change
