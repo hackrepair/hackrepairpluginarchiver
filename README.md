@@ -4,71 +4,65 @@
 
 <h1 align="center">The Hack Repair Guy's Plugin Archiver</h1>
 
-<p align="center">
-  <strong>Disable plugins without deleting them. Archive and restore in one click.</strong><br>
-  By Jim Walker, The Hack Repair Guy
-</p>
+Disable plugins without deleting them. Archive any plugin in one click, restore it whenever you need it.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.1-b34700?style=flat-square" alt="Version 3.1.1">
-  <img src="https://img.shields.io/badge/WordPress-6.6%2B-21759b?style=flat-square&logo=wordpress&logoColor=white" alt="WordPress 6.6+">
-  <img src="https://img.shields.io/badge/PHP-7.4%2B-777bb4?style=flat-square&logo=php&logoColor=white" alt="PHP 7.4+">
-  <img src="https://img.shields.io/badge/license-GPLv3-2e7d32?style=flat-square" alt="License GPLv3">
-</p>
+Sites collect plugins that are switched off but not quite ready to be deleted: something you are testing, a tool you use twice a year, a plugin that broke the site and that nobody should click Activate on again. Plugin Archiver moves the plugin's files out of `wp-content/plugins` into a separate archive folder. WordPress stops listing it, so it cannot be activated by accident, but nothing is deleted and its settings stay in the database.
 
-<p align="center">
-  <a href="https://wordpress.org/plugins/hackrepair-plugin-archiver/"><img src="https://img.shields.io/badge/GET%20IT%20ON%20WORDPRESS.ORG-b34700?style=for-the-badge" alt="Get it on WordPress.org" height="64"></a>
-</p>
+Current release: **3.1.2**. See [release notes](releases/v3.1.2.md).
 
----
+## What it does
 
-Archive any plugin with one click. Archived plugins are hidden from your Plugins list and safely moved out of `wp-content/plugins` into a dedicated archive directory for easy restore later.
+**Plugins → Installed Plugins** gets an **Archive** link under every plugin, and **Archive** joins the bulk actions.
 
-## Why use it?
+**Plugins → Archived Plugins** lists what is in the archive. From there you can:
 
-- Keep a toolbox of utilities out of sight until you need them
-- Quarantine buggy or compromised plugins so nobody can click Activate by accident
-- Test different plugin sets by archiving and restoring groups
-- Reduce "oops, I clicked Activate" when sharing admin access
+- **Restore** a plugin to `wp-content/plugins`, one at a time or in bulk
+- **Delete** a plugin's files from the archive, one at a time or in bulk
+- **Unarchive all** at once
 
-## Features
+**Settings → Plugin Archiver** controls:
 
-- One-click **Archive** link on the Plugins screen
-- Bulk Archive / Unarchive / Delete actions
-- Optional auto-deactivate before archiving (recommended)
-- Multiple archive directories, and switching between them
-- "Unarchive All" button on the Archived Plugins tab
-- Non-destructive: archiving moves files only and leaves a plugin's settings and data alone
-- Uses the WordPress Filesystem API with capability and nonce checks
+- Auto-deactivate before archiving (recommended, on by default)
+- Several archive folders, and which one is active
 
-## Quick start
+Archiving moves files only. A plugin's saved settings and data stay where they were, so a restored plugin comes back configured.
 
-1. Go to **Plugins > Installed Plugins** and click **Archive** under any plugin.
-2. Manage archived plugins at **Plugins > Archived Plugins**, or **Settings > Plugin Archiver > Archived Plugins**.
-3. **Unarchive** restores to `wp-content/plugins`. **Delete** removes it from the archive.
+## Privacy and scope
 
-Archived plugins live in `wp-content/plugins-archive-xxxxxx` by default. You can create and switch archives in Settings.
+The plugin makes no outside requests, sends nothing about your site anywhere, and adds nothing to the public side of your site. It uses the WordPress Filesystem API and checks capabilities and nonces on every action. Archived plugins stay on your server in the archive folder until you restore or delete them.
 
-## Video
+It is not a backup tool, a malware scanner or a plugin manager. Archiving removes a plugin from WordPress's view; it does not make a vulnerable plugin safe to keep on disk. If you archive a plugin because it is compromised or abandoned, delete it from the archive when you are done with it.
 
-https://www.youtube.com/watch?v=i_Gn22bWLVs
+## Install
+
+Install from **Plugins → Add New** (search for "The Hack Repair Guy's Plugin Archiver") or from [WordPress.org](https://wordpress.org/plugins/hackrepair-plugin-archiver/ "Plugin Archiver on WordPress.org"), then activate it. To install by hand, upload the `hackrepair-plugin-archiver` folder to `wp-content/plugins/`.
+
+Updates come from WordPress.org. This repository is the source and history of the plugin.
 
 ## Development
 
-Developer notes, release process (WordPress.org SVN) and project status are in [PROJECT.md](PROJECT.md "Project notes").
+Requires WordPress 6.6+ and PHP 7.4+. Tests are plain scripts:
 
-```sh
-/Volumes/BACKUP8TB2/plugins/PHPCS/run-phpcs.sh "$PWD"
+```
 python3 tests/package-permissions.py
-python3 scripts/build-release.py      # writes dist/<slug>.<version>.zip
 ```
 
-## Support
+Run shared PHPCS with `/Volumes/BACKUP8TB2/plugins/PHPCS/run-phpcs.sh "$PWD"`. Build a ZIP with `python3 scripts/build-release.py` (writes to `dist/`).
 
-Questions and help: the [WordPress.org support forum](https://wordpress.org/support/plugin/hackrepair-plugin-archiver/ "Plugin Archiver support forum"). Guide and documentation: https://hackrepair.com/about/hackrepair-plugin-archiver
+See [PROJECT.md](PROJECT.md "Architecture, release process, design decisions and known limits") for the architecture, the WordPress.org release process and known limits.
 
-Built by Jim Walker, The Hack Repair Guy: https://HackRepair.com
+## Author and support
 
-## License
+**[Jim Walker](https://hackrepair.com/)** — The Hack Repair Guy — author and maintainer.
 
-GPLv3. See [LICENSE](LICENSE).
+[Questions and help](https://wordpress.org/support/plugin/hackrepair-plugin-archiver/ "Plugin Archiver support forum on WordPress.org") · [Report a bug](https://github.com/hackrepair/hackrepairpluginarchiver/issues) · [Security reporting](mailto:jim%40hackrepair%2Ecom) · [Buy Jim a coffee](https://hackrepair.com/donations/buy-jim-a-coffee)
+
+## License and credits
+
+[GPLv3](https://www.gnu.org/licenses/gpl-3.0.html "Read the GNU General Public License, version 3"). The default archive-folder randomization began as a 2015 contribution by Arūnas Liuiza.
+
+Made by [The Hack Repair Guy](https://hackrepair.com/ "The Hack Repair Guy: WordPress security and hack repair").
+
+## Changelog
+
+See the **Changelog** section of [`readme.txt`](readme.txt).

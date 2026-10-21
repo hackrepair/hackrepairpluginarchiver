@@ -6,14 +6,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/*
-Plugin Name: The Hack Repair Guy's Plugin Archiver
-Plugin URI: http://wordpress.org/extend/plugins/hackrepair-plugin-archiver/
-Description: Quickly deactivate and archive a plugin for later use. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
-Author: Jim Walker, The Hack Repair Guy
-Version: 3.1.1
-Author URI: http://hackrepair.com/hackrepair-plugin-archiver/
-*/
+/**
+ * Plugin Name:       The Hack Repair Guy's Plugin Archiver
+ * Plugin URI:        https://wordpress.org/plugins/hackrepair-plugin-archiver/
+ * Description:       Quickly deactivate and archive a plugin for later use. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
+ * Version:           3.1.2
+ * Requires at least: 6.6
+ * Requires PHP:      7.4
+ * Author:            Jim Walker, The Hack Repair Guy
+ * Author URI:        https://hackrepair.com/hackrepair-plugin-archiver/
+ * License:           GPLv3
+ * License URI:       https://www.gnu.org/licenses/gpl-3.0.html
+ * Text Domain:       hackrepair-plugin-archiver
+ * Domain Path:       /languages
+ *
+ * @package HackRepair_Plugin_Archiver
+ */
 
 
 add_action( 'init', array( 'HackRepair_Plugin_Archiver', 'init' ) );

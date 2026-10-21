@@ -1,13 +1,14 @@
 === The Hack Repair Guy's Plugin Archiver ===
 Contributors: hackrepair, tvcnet
-Tags: admin, backup, database, security, performance
+Tags: archive, plugins, deactivate, plugin manager, security
 Donate link: https://hackrepair.com/about/hackrepair-plugin-archiver
 Requires at least: 6.6
 Tested up to: 6.8.2
 Requires PHP: 7.4
-Stable tag: 3.1.1
+Stable tag: 3.1.2
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
+Support link: https://wordpress.org/support/plugin/hackrepair-plugin-archiver/
 
 Disable Plugins Without Deleting — Archive and Restore in One Click
 
@@ -79,6 +80,11 @@ No. Archiving only moves plugin files.
 3. Settings screen with archive directory controls
 
 == Changelog ==
+
+= 3.1.2 =
+- Code-style cleanups: strict comparisons and consistent formatting; no behavior change
+- Plugin header now declares required WordPress and PHP versions, license and text domain, and uses https links
+- Readme refresh
 
 = 3.1.1 =
 - Removed all debug logging statements to reduce log clutter in production environments
