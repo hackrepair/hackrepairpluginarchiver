@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<ruleset name="The Hack Repair Guy's Plugin Archiver">
+	<description>WordPress Coding Standards plus PHP 7.4+ compatibility.</description>
+
+	<file>.</file>
+
+	<!-- Not shipped plugin code. -->
+	<exclude-pattern>/tests/*</exclude-pattern>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/dist/*</exclude-pattern>
+	<exclude-pattern>/docs/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg value="sp"/>
+
+	<config name="minimum_wp_version" value="6.6"/>
+	<config name="testVersion" value="7.4-"/>
+
+	<rule ref="WordPress"/>
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="hackrepair-plugin-archiver"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="hackrepair_plugin_archiver"/>
+				<element value="HackRepair_Plugin_Archiver"/>
+				<element value="hackrepair"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="PHPCompatibilityWP"/>
+</ruleset>
