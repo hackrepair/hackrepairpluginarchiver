@@ -74,7 +74,9 @@ check( '403 = protected', 'protected' === $S::evaluate_response( 403, 'Forbidden
 check( '404 = protected', 'protected' === $S::evaluate_response( 404, '' ) );
 
 check( 'derived label', 'Archive a1b2c3' === $S::derived_label( 'plugins-archive-a1b2c3' ) );
-
+check( 'default label uses 6 chars of the random suffix', 'Archive abcdef' === $S::default_label( 'plugins-archive-abcdef123456' ) );
+check( 'default label for an older folder name is plain', 'Archive' === $S::default_label( 'plugins-archive-a1b2c3' ) );
+check( 'default label for a named archive is plain', 'Archive' === $S::default_label( 'plugins-archive-my-stuff-k3x9a7q2' ) );
 check( 'registry ignores junk', array() === $S::registry() );
 update_option( $S::REGISTRY_OPTION, array( '../bad' => array( 'label' => 'x' ), 'plugins-ok' => array( 'label' => 'Ok', 'created' => 5, 'legacy' => 1 ), 'plugins-str' => 'x' ) );
 $reg = $S::registry();
@@ -83,5 +85,10 @@ check( 'active_name falls back to first registered', 'plugins-ok' === $S::active
 check( 'active_name keeps registered', 'plugins-ok' === $S::active_name( 'plugins-ok' ) );
 check( 'register keeps created time', $S::register( 'plugins-ok', 'Renamed', false ) && 5 === $S::registry()['plugins-ok']['created'] );
 check( 'register refuses bad names', ! $S::register( 'etc', 'x' ) );
+
+update_option( $S::REGISTRY_OPTION, array( 'plugins-archive-abcdef123456' => array( 'label' => 'Archive', 'created' => 5, 'legacy' => 0 ), 'plugins-archive-my-stuff-k3x9a7q2' => array( 'label' => 'My stuff', 'created' => 6, 'legacy' => 0 ) ) );
+$reg = $S::registry();
+check( 'plain Archive label gains the short code', 'Archive abcdef' === $reg['plugins-archive-abcdef123456']['label'] );
+check( 'a typed label is left alone', 'My stuff' === $reg['plugins-archive-my-stuff-k3x9a7q2']['label'] );
 
 exit( $fail ? 1 : 0 );

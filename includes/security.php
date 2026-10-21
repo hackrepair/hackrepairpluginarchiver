@@ -144,6 +144,20 @@ class HackRepair_Plugin_Archiver_Security {
 		return '' === $name ? $dir : ucfirst( $name );
 	}
 
+	/**
+	 * Label for an archive that was created without a name: "Archive" plus the first six characters of its random suffix.
+	 *
+	 * @param string $dir Folder name.
+	 * @return string
+	 */
+	public static function default_label( $dir ) {
+		if ( 1 === preg_match( '/^plugins-archive-([a-z0-9]{12})$/', (string) $dir, $m ) ) {
+			/* translators: %s: six characters taken from the archive folder name. */
+			return sprintf( __( 'Archive %s', 'hackrepair-plugin-archiver' ), substr( $m[1], 0, 6 ) );
+		}
+		return __( 'Archive', 'hackrepair-plugin-archiver' );
+	}
+
 	// ------------------------------------------------------------- Registry.
 
 	/**
@@ -157,8 +171,13 @@ class HackRepair_Plugin_Archiver_Security {
 		if ( is_array( $registry ) ) {
 			foreach ( $registry as $dir => $info ) {
 				if ( self::is_valid_dir_name( $dir ) && is_array( $info ) ) {
+					$label = isset( $info['label'] ) ? (string) $info['label'] : self::derived_label( $dir );
+					// Archives saved by 3.2.0 to 3.3.2 carry the plain label "Archive"; add the short code so several can be told apart.
+					if ( 'Archive' === $label || __( 'Archive', 'hackrepair-plugin-archiver' ) === $label ) {
+						$label = self::default_label( $dir );
+					}
 					$clean[ $dir ] = array(
-						'label'   => isset( $info['label'] ) ? (string) $info['label'] : self::derived_label( $dir ),
+						'label'   => $label,
 						'created' => isset( $info['created'] ) ? (int) $info['created'] : 0,
 						'legacy'  => ! empty( $info['legacy'] ),
 					);
@@ -395,7 +414,7 @@ class HackRepair_Plugin_Archiver_Security {
 		if ( $wp_filesystem->exists( $path ) || ! $wp_filesystem->mkdir( $path, FS_CHMOD_DIR ) ) {
 			return false;
 		}
-		$display = '' === trim( (string) $label ) ? __( 'Archive', 'hackrepair-plugin-archiver' ) : substr( sanitize_text_field( $label ), 0, 40 );
+		$display = '' === trim( (string) $label ) ? self::default_label( $name ) : substr( sanitize_text_field( $label ), 0, 40 );
 		self::register( $name, $display, false );
 		self::protect( $path );
 		return $name;
@@ -642,7 +661,7 @@ class HackRepair_Plugin_Archiver_Security {
 		$created = $registry[ $dir ]['created'];
 		unset( $registry[ $dir ] );
 		$registry[ $new_name ] = array(
-			'label'   => $default ? __( 'Archive', 'hackrepair-plugin-archiver' ) : $label,
+			'label'   => $default ? self::default_label( $new_name ) : $label,
 			'created' => $created ? $created : time(),
 			'legacy'  => false,
 		);
