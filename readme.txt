@@ -8,7 +8,7 @@ Requires PHP: 7.4
 Stable tag: 3.3.0
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
-Support link: https://github.com/hackrepair/hackrepairpluginarchiver/discussions
+Support link: https://wordpress.org/support/plugin/hackrepair-plugin-archiver/
 
 Disable plugins without deleting them. Archive in one click, restore any time, and keep the archive hidden and blocked from the web.
 
@@ -47,15 +47,17 @@ Plugin Archiver is not a backup tool, a malware scanner or a plugin manager. Arc
 
 = Other Hack Repair Guy plugins =
 
-* [Site Inspector](https://github.com/hackrepair/thrg-site-inspector "Site Inspector on GitHub") keeps a history of read-only security checks, so you can see what is new and what is fixed.
-* [Plugin Detective](https://github.com/hackrepair/hackrepair-plugin-detective "Plugin Detective on GitHub") finds the plugin that broke your site in a few quick checks, even when wp-admin is down.
-* [Disable Other Plugin Notices](https://github.com/hackrepair/disable-other-plugin-notices "Disable Other Plugin Notices on GitHub") groups notices from other plugins and themes into one collapsed panel.
-* [Group Password Reset](https://github.com/hackrepair/group-password-reset "Group Password Reset on GitHub") lets administrators bulk reset passwords and send secure reset links.
-* [Admin Login Notifier](https://github.com/hackrepair/hackrepair-admin-login-notifier "Admin Login Notifier on GitHub") tells you the moment an Administrator logs in to your dashboard.
+More free WordPress tools by [The Hack Repair Guy](https://hackrepair.com/ "The Hack Repair Guy: WordPress security and hack repair"):
+
+* Site Inspector keeps a history of read-only security checks, so you can see what is new and what is fixed.
+* Plugin Detective finds the plugin that broke your site in a few quick checks, even when wp-admin is down.
+* Disable Other Plugin Notices groups notices from other plugins and themes into one collapsed panel.
+* Group Password Reset lets administrators bulk reset passwords and send secure reset links.
+* Admin Login Notifier tells you the moment an Administrator logs in to your dashboard.
 
 = Credits =
 
-Created and maintained by [Jim Walker](https://hackrepair.com/ "Jim Walker, The Hack Repair Guy"). Source and history: [hackrepair/hackrepairpluginarchiver](https://github.com/hackrepair/hackrepairpluginarchiver "Plugin Archiver source on GitHub").
+Created and maintained by [Jim Walker](https://hackrepair.com/ "Jim Walker, The Hack Repair Guy").
 
 == Frequently Asked Questions ==
 
@@ -116,14 +118,8 @@ No. Archiving only moves plugin files.
 
 == Support ==
 
-For questions, ideas and community support, visit GitHub Discussions:
-https://github.com/hackrepair/hackrepairpluginarchiver/discussions
-
-The WordPress.org support forum is also monitored:
+For questions, ideas and bug reports, use the WordPress.org support forum:
 https://wordpress.org/support/plugin/hackrepair-plugin-archiver/
-
-Report reproducible bugs through Issues:
-https://github.com/hackrepair/hackrepairpluginarchiver/issues
 
 Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not include credentials or sensitive site information in public posts.
 
@@ -148,7 +144,7 @@ Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not i
 - Archiving and restoring never overwrite an existing plugin at the destination
 - Only registered archives can be selected on the Archived Plugins screen
 - Code cleanup: removed unused commented-out code; tab navigation output is escaped
-- Readme restructured to match the Hack Repair Guy plugin standard: plain-language description, Privacy, What it is not, Support (GitHub Discussions, Issues, private security contact), Credits and tooltip links
+- Readme restructured to match the Hack Repair Guy plugin standard: plain-language description, Privacy, What it is not, Support (WordPress.org forum, private security contact), Credits and tooltip links
 
 = 3.1.2 =
 - Code-style cleanups: strict comparisons and consistent formatting; no behavior change
