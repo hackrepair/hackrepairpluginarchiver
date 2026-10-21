@@ -3,7 +3,7 @@ Contributors: hackrepair, tvcnet
 Tags: archive, plugins, deactivate, plugin manager, security
 Donate link: https://hackrepair.com/donations/buy-jim-a-coffee
 Requires at least: 6.6
-Tested up to: 6.8.2
+Tested up to: 7.1.3
 Requires PHP: 7.4
 Stable tag: 3.3.0
 License: GPLv3
