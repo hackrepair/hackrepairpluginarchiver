@@ -75,18 +75,16 @@ class HackRepair_Plugin_Archiver_Bulk_Action {
 	 * Based on the post http://wordpress.stackexchange.com/questions/29822/custom-bulk-action
 	 */
 	function custom_bulk_action() {
-		// Capability check
-		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( __( 'You do not have sufficient permissions to perform this action.', 'hackrepair-plugin-archiver' ) );
-		}
-		// get the action
-		$wp_list_table = _get_list_table( 'WP_Plugins_List_Table' );  // depending on your resource type this could be WP_Users_List_Table, WP_Comments_List_Table, etc
+		// Only our own actions are handled here; every other Plugins-screen request passes through untouched.
+		$wp_list_table = _get_list_table( 'WP_Plugins_List_Table' );
 		$action        = $wp_list_table->current_action();
-
-		// allow only defined actions
-		$allowed_actions = array_keys( $this->actions );
-		if ( ! in_array( $action, $allowed_actions, true ) ) {
+		if ( ! in_array( $action, array_keys( $this->actions ), true ) ) {
 			return;
+		}
+
+		// Capability check, after we know the request is ours.
+		if ( ! current_user_can( 'install_plugins' ) ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to perform this action.', 'hackrepair-plugin-archiver' ) );
 		}
 
 		// security check

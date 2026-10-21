@@ -117,7 +117,7 @@ class HackRepair_Plugin_Archiver_Download {
 	 * Admin-post: build and send the zip.
 	 */
 	public static function handle() {
-		if ( ! current_user_can( 'install_plugins' ) ) {
+		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Verified below.

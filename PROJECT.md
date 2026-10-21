@@ -36,13 +36,13 @@ Distributed by **WordPress.org**, not GitHub releases. This differs from the Git
 
 ## Design rules
 
-- All actions need a capability (`install_plugins` today) and a nonce. Plugin and archive paths are validated and must stay inside their own folders. Moves use the WordPress Filesystem API.
+- Capabilities: viewing the archive, the archive screens and Download need `activate_plugins` (`manage_network_plugins` on multisite, where archive folders are shared), via `HackRepair_Plugin_Archiver_Security::can_view()`. Archive, restore, delete and Secure need `install_plugins` plus `wp_is_file_mod_allowed()`. Do not gate viewing on `install_plugins`: WordPress removes it from everyone when `DISALLOW_FILE_MODS` is set. Settings, the log and its export/clear need `manage_options`. Every action also needs a nonce. Plugin and archive paths are validated and must stay inside their own folders. Moves use the WordPress Filesystem API.
 - Nothing is overwritten: a move to an existing destination is refused.
 - No outside requests (the only request is to the site's own archive marker file), no scheduled jobs, no tracking.
 - Archive folder names are `plugins-archive-<12 random chars>` or `plugins-archive-<label>-<8 random chars>`. Only folders in the registry can be selected. Protection files are rewritten before archive/restore. Renaming a legacy folder (Secure this archive) needs direct filesystem access.
-- Download needs `install_plugins` and a nonce tied to archive and plugin; the archive must be in the registry; the path must resolve inside the archive; symbolic links are skipped; the zip is built in a temporary file that is deleted after sending; the size cap is filterable (`hackrepair_plugin_archiver_download_max_bytes`). The log and its export/clear need `manage_options`; CSV cells that start with `=`, `+`, `-`, `@` or a tab are prefixed with an apostrophe.
+- Download needs `can_view()` and a nonce tied to archive and plugin; the archive must be in the registry; the path must resolve inside the archive; symbolic links are skipped; the zip is built in a temporary file that is deleted after sending; the size cap is filterable (`hackrepair_plugin_archiver_download_max_bytes`). The log and its export/clear need `manage_options`; CSV cells that start with `=`, `+`, `-`, `@` or a tab are prefixed with an apostrophe.
 - Plugins archived before 3.3.0 have no manifest entry; the list shows the folder's modified time marked "about". Restore counts were dropped: the log records every restore.
-- With `DISALLOW_FILE_MODS` (`wp_is_file_mod_allowed()`), every write path stops and the screens are read-only.
+- With `DISALLOW_FILE_MODS` (`wp_is_file_mod_allowed()`), every write path stops and the screens are read-only; the one-time migration keeps re-running until protection files can be written.
 - The `hackrepair_plugin_archiver_base_dir` filter planned earlier was not built; the archive stays in `wp-content`, in the same place as in all earlier builds, and moving it elsewhere is not supported.
 - Archived plugins are left in place if this plugin is deactivated or deleted.
 

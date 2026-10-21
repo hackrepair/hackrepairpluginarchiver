@@ -33,6 +33,22 @@ class HackRepair_Plugin_Archiver_Security {
 	}
 
 	/**
+	 * Whether the current user may see archived plugins, the archive screens
+	 * and download a zip. Uses activate_plugins because WordPress removes
+	 * install_plugins from everyone when DISALLOW_FILE_MODS is set; on
+	 * multisite it needs a network administrator, since the archive folders
+	 * in wp-content are shared by every site.
+	 *
+	 * @return bool
+	 */
+	public static function can_view() {
+		if ( is_multisite() ) {
+			return current_user_can( 'manage_network_plugins' );
+		}
+		return current_user_can( 'activate_plugins' );
+	}
+
+	/**
 	 * Whether this site allows plugin files to be changed (DISALLOW_FILE_MODS).
 	 *
 	 * @return bool
@@ -283,7 +299,7 @@ class HackRepair_Plugin_Archiver_Security {
 	 * @return array Updated options.
 	 */
 	public static function maybe_migrate( array $options ) {
-		if ( ! is_admin() || ! current_user_can( 'install_plugins' ) ) {
+		if ( ! is_admin() || ! self::can_view() ) {
 			return $options;
 		}
 		if ( get_option( self::DB_VERSION_OPTION ) === self::DB_VERSION ) {
@@ -326,7 +342,10 @@ class HackRepair_Plugin_Archiver_Security {
 				}
 			}
 		}
-		update_option( self::DB_VERSION_OPTION, self::DB_VERSION );
+		// Finish only once the protection files could be written; until then this re-runs (cheaply) on admin screens.
+		if ( self::file_mods_allowed() ) {
+			update_option( self::DB_VERSION_OPTION, self::DB_VERSION );
+		}
 		return $options;
 	}
 
@@ -478,7 +497,7 @@ class HackRepair_Plugin_Archiver_Security {
 		);
 		if ( is_wp_error( $response ) ) {
 			$status = 'unknown';
-			$ttl    = 300;
+			$ttl    = HOUR_IN_SECONDS; // Do not retry a failing self-request on every screen load.
 		} else {
 			$status = self::evaluate_response( wp_remote_retrieve_response_code( $response ), wp_remote_retrieve_body( $response ) );
 			$ttl    = self::CHECK_TTL;
@@ -664,7 +683,7 @@ class HackRepair_Plugin_Archiver_Security {
 	 */
 	public static function handle_recheck() {
 		$dir = isset( $_POST['archive'] ) ? sanitize_file_name( wp_unslash( $_POST['archive'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Verified below.
-		if ( ! current_user_can( 'install_plugins' ) ) {
+		if ( ! self::can_view() ) {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ), '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( 'hrpa_recheck_' . $dir );

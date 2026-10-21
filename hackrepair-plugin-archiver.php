@@ -203,8 +203,8 @@ class HackRepair_Plugin_Archiver {
 
 	// Render the Archived Plugins list inside the Settings page "Archived Plugins" tab.
 	public static function archive_tab() {
-		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
 		if ( ! class_exists( 'WP_List_Table' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
@@ -243,13 +243,13 @@ class HackRepair_Plugin_Archiver {
 	}
 	// Register Plugins submenu and render the Archived Plugins page.
 	public static function menu() {
-		if ( ! current_user_can( 'install_plugins' ) ) {
+		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
 			return;
 		}
 		add_plugins_page(
 			__( 'Archived Plugins', 'hackrepair-plugin-archiver' ),
 			__( 'Archived Plugins', 'hackrepair-plugin-archiver' ),
-			'install_plugins',
+			'activate_plugins',
 			'hackrepair-plugin-archiver',
 			array( 'HackRepair_Plugin_Archiver', 'render_archive_page' )
 		);
@@ -281,8 +281,8 @@ class HackRepair_Plugin_Archiver {
 	}
 
 	public static function render_archive_page() {
-		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}// Ensure list table class is available.
 		if ( ! class_exists( 'WP_List_Table' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
@@ -457,15 +457,18 @@ class HackRepair_Plugin_Archiver {
 	public static function archive_actions() {
 			// Verify nonce for security
 			// Check user capabilities
-		if ( ! current_user_can( 'install_plugins' ) ) {
-			wp_die( __( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
+		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
+			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'hackrepair-plugin-archiver' ) );
 		}
-		self::require_file_mods();
 
 		if ( isset( $_REQUEST['action'] ) && isset( $_REQUEST['_wpnonce'] ) ) {
 			if ( ! wp_verify_nonce( $_REQUEST['_wpnonce'], 'bulk-plugins' ) ) {
 				wp_die( __( 'Security check failed', 'hackrepair-plugin-archiver' ) );
 			}
+			if ( ! current_user_can( 'install_plugins' ) ) {
+				wp_die( esc_html__( 'You do not have sufficient permissions to change archived plugins.', 'hackrepair-plugin-archiver' ) );
+			}
+			self::require_file_mods();
 
 			// Validate action parameter
 			$action = sanitize_key( $_REQUEST['action'] );

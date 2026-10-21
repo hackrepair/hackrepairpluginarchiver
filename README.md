@@ -33,14 +33,14 @@ Current release: **3.3.0**. See [release notes](releases/v3.3.0.md).
 
 - **Dates.** The plugin remembers when each plugin went into the archive and by whom. Plugins archived before 3.3.0 show an estimate marked "about", taken from the folder's date.
 - **Activity log.** The newest 500 actions are kept in your database and never leave your site. Export them as CSV, or clear them (clearing is logged too).
-- **Download as zip.** One click builds a zip with a single top-level folder, ready to keep or hand to someone. It needs an administrator who can install plugins and a valid nonce, skips symbolic links, refuses plugins over 200 MB (change with the `hackrepair_plugin_archiver_download_max_bytes` filter) and works even when `DISALLOW_FILE_MODS` is set, since it reads files only.
+- **Download as zip.** One click builds a zip with a single top-level folder, ready to keep or hand to someone. It needs a user who can activate plugins (a network administrator on multisite) and a valid nonce, skips symbolic links, refuses plugins over 200 MB (change with the `hackrepair_plugin_archiver_download_max_bytes` filter) and works even when `DISALLOW_FILE_MODS` is set, since it reads files only.
 - **Clean uninstall.** Deleting the plugin removes its own settings, dates and log, and leaves archived plugins and their folders alone.
 
 **Safer by default (3.2.0):**
 
 - **Random archive folder names.** New archives are named like `plugins-archive-k3x9a7q2m5zt`, so the location cannot be guessed. Archives made by earlier versions are found automatically and kept as they are; **Secure this archive** renames one to a random name.
 - **Blocked from the web.** Every archive folder gets deny rules for Apache (`.htaccess`, 2.2 and 2.4), IIS (`web.config`) and an `index.php`. The plugin requests a small marker file from your own site to confirm the rules work, warns you on screen if the folder can be read, and adds a **Site Health** test. On nginx, add `location ^~ /wp-content/<folder> { deny all; }` (the warning shows the exact line).
-- **`DISALLOW_FILE_MODS` respected.** When a site turns off file changes, the Archive links, bulk actions and restore/delete buttons are hidden and the lists are read-only.
+- **`DISALLOW_FILE_MODS` respected.** When a site turns off file changes, the Archive links, bulk actions and restore/delete buttons are hidden. The Archived Plugins list stays visible, read-only, and Download still works.
 - **Nothing is overwritten.** Archiving or restoring is skipped if a plugin with the same folder name is already at the destination.
 
 Archiving moves files only. A plugin's saved settings and data stay where they were, so a restored plugin comes back configured.

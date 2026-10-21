@@ -33,7 +33,7 @@ Under **Plugins > Installed Plugins** every plugin gets an **Archive** link, and
 
 **Archives are blocked from the web.** Every archive folder gets deny rules for Apache (2.2 and 2.4) and IIS plus an index file, rewritten if they go missing. The plugin checks that they work by requesting a small marker file from your own site, warns you on screen if a folder can still be read, and adds a test to Site Health. Archived plugins are often old and sometimes vulnerable, so they should never be downloadable.
 
-**Respects locked-down sites.** If your site sets DISALLOW_FILE_MODS, archiving, restoring and deleting are turned off and the lists are read-only. The plugin never overwrites a plugin that already exists at the destination.
+**Respects locked-down sites.** If your site sets DISALLOW_FILE_MODS, archiving, restoring and deleting are turned off, while the Archived Plugins list stays visible and Download still works. The plugin never overwrites a plugin that already exists at the destination.
 
 Good for preventing accidental re-activation, quarantining a buggy or compromised plugin, testing different plugin sets, and keeping occasional-use tools out of sight until needed.
 
@@ -89,7 +89,7 @@ Archiving, restoring and deleting are turned off, the Archive links and bulk act
 It keeps working. Open Settings → Plugin Archiver and choose Secure this archive to rename it to a random name.
 
 = How does Download work? =
-Choose Download under an archived plugin. The plugin builds a zip with one top-level folder, skips symbolic links, and sends it to you. It needs the permission to install plugins, a valid nonce and the PHP zip extension, and it refuses plugins larger than 200 MB (adjust with the hackrepair_plugin_archiver_download_max_bytes filter). It works even when DISALLOW_FILE_MODS is set because it only reads files.
+Choose Download under an archived plugin. The plugin builds a zip with one top-level folder, skips symbolic links, and sends it to you. It needs the permission to activate plugins (a network administrator on multisite), a valid nonce and the PHP zip extension, and it refuses plugins larger than 200 MB (adjust with the hackrepair_plugin_archiver_download_max_bytes filter). It works even when DISALLOW_FILE_MODS is set because it only reads files.
 
 = What does the activity log record? =
 The time, the user name, the action (archived, restored, deleted, downloaded, archive renamed, log cleared), the plugin and the archive. It keeps the newest 500 entries in your database, never sends them anywhere, and only administrators who can manage options can see, export or clear them.
@@ -131,6 +131,8 @@ Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not i
 == Changelog ==
 
 = 3.3.0 =
+- Fix: with DISALLOW_FILE_MODS the Archived Plugins screen and Download now stay available (read-only), as documented; viewing needs activate_plugins, changes still need install_plugins
+- Fix: the Plugins screen no longer stops users who lack install_plugins (for example multisite site administrators)
 - New: Archived on and In the archive for columns in the Archived Plugins list, sortable; plugins archived earlier show an estimated date marked "about"
 - New: Activity Log tab (newest 500 actions, filters, paging, CSV export, clear)
 - New: Download an archived plugin as a zip file (single top-level folder, symbolic links skipped, 200 MB limit)

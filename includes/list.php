@@ -31,7 +31,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 
 		// Only instantiate the list table for users who can manage plugins.
 		// This avoids exposing plugin UI to unauthorized users.
-		if ( ! current_user_can( 'install_plugins' ) ) {
+		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
 			return;
 		}
 
@@ -59,7 +59,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 		global $status, $plugins, $totals, $page, $orderby, $order, $s;
 
 		// Only allow users with the appropriate capability to prepare and view plugin archive items.
-		if ( ! current_user_can( 'install_plugins' ) ) {
+		if ( ! HackRepair_Plugin_Archiver_Security::can_view() ) {
 			$this->items = array();
 			return;
 		}
@@ -347,7 +347,7 @@ class WP_Plugins_Archive_List_Table extends WP_List_Table {
 			$actions['remove']  = '<a href="' . esc_url( $remove_url ) . '" title="' . esc_attr__( 'Delete this plugin', 'hackrepair-plugin-archiver' ) . '" class="delete">' . esc_html__( 'Delete', 'hackrepair-plugin-archiver' ) . '</a>';
 		}
 
-		if ( current_user_can( 'install_plugins' ) && class_exists( 'ZipArchive' ) && HackRepair_Plugin_Archiver_Download::is_valid_plugin_file( $plugin_file ) ) {
+		if ( HackRepair_Plugin_Archiver_Security::can_view() && class_exists( 'ZipArchive' ) && HackRepair_Plugin_Archiver_Download::is_valid_plugin_file( $plugin_file ) ) {
 			$actions['download'] = '<a href="' . esc_url( HackRepair_Plugin_Archiver_Download::url( $this->archive, $plugin_file ) ) . '" title="' . esc_attr__( 'Download this plugin as a zip file', 'hackrepair-plugin-archiver' ) . '">' . esc_html__( 'Download', 'hackrepair-plugin-archiver' ) . '</a>';
 		}
 
