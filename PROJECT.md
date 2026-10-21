@@ -17,7 +17,7 @@ Distributed by **WordPress.org**, not GitHub releases. This differs from the Git
 - No bundled `plugin-update-checker/` and no updater class. WordPress.org serves updates, and plugins in the directory must not ship their own update mechanism.
 - A release is an SVN commit to `trunk/` plus a copy to `tags/X.Y.Z`. The ZIP from `scripts/build-release.py` is for local testing and the `releases/` archive; the directory builds its own download from the tag.
 - Directory images live in `.wordpress-org/` and are copied to SVN `assets/`. They never go into the plugin ZIP.
-- This GitHub repo (`hackrepair/hackrepairpluginarchiver`, default branch `master`) holds source and history. Local `main` pushes with `git push origin main:master`. Tag releases here as `vX.Y.Z` after the SVN tag exists. Version 3.1.1 and earlier tags have no `v`.
+- This GitHub repo (`hackrepair/hackrepairpluginarchiver`, default branch `main`) holds source and history and mirrors what is released on WordPress.org. Push with `git push origin main`. Tag `vX.Y.Z` here only after the matching SVN tag exists. Version 3.1.1 and earlier tags have no `v`.
 
 ## Architecture
 
@@ -31,7 +31,7 @@ Distributed by **WordPress.org**, not GitHub releases. This differs from the Git
 - `uninstall.php`: deletes the plugin's own options and transients only.
 - `includes/pointers.php`, `includes/notes.php`: the admin pointer and the Author Notes panel.
 - Option keys: `hackrepair-plugin-archiver_options` (`archive_dir`, `archive_dir_add`, `deactivate`); `hackrepair-plugin-archiver_archives` (registry: folder => label, created, legacy; not autoloaded); `hackrepair-plugin-archiver_manifest` (`<folder>|<plugin file>` => name, version, archived, user; capped at 1000; not autoloaded); `hackrepair-plugin-archiver_log` (newest 500 entries: t, u, a, d, p, n, x; not autoloaded); `hackrepair-plugin-archiver_db_version` (one-time migration marker). Transients `hrpa_reach_<md5>` cache the reachability result (12 hours, 5 minutes after an error).
-- `.wordpress-org/`: banner (772x250, 244x245) and icons (128, 256). A 1544x500 retina banner has not been made.
+- `.wordpress-org/`: the WordPress.org directory images, named to the WordPress.org standard: `banner-772x250.png`, `banner-1544x500.png` (a sharpened 2x of the original; re-export from the Photoshop file at 2x for a crisper one), `icon-128x128.png`, `icon-256x256.png`. They are copied into SVN `assets/` at release, never into the plugin ZIP. The old `banner-244x245.png` is not a WordPress.org size; it was dropped from the repo but still sits in SVN `assets/` until removed at the next release.
 - `docs/audits/`: the November 2024 security and PHP 8.3 audits of 2.0.4. Historical; 3.x addressed most findings.
 
 ## Design rules
@@ -43,7 +43,7 @@ Distributed by **WordPress.org**, not GitHub releases. This differs from the Git
 - Download needs `install_plugins` and a nonce tied to archive and plugin; the archive must be in the registry; the path must resolve inside the archive; symbolic links are skipped; the zip is built in a temporary file that is deleted after sending; the size cap is filterable (`hackrepair_plugin_archiver_download_max_bytes`). The log and its export/clear need `manage_options`; CSV cells that start with `=`, `+`, `-`, `@` or a tab are prefixed with an apostrophe.
 - Plugins archived before 3.3.0 have no manifest entry; the list shows the folder's modified time marked "about". Restore counts were dropped: the log records every restore.
 - With `DISALLOW_FILE_MODS` (`wp_is_file_mod_allowed()`), every write path stops and the screens are read-only.
-- The `hackrepair_plugin_archiver_base_dir` filter planned earlier was not built; moving the archive outside the web root is not supported yet.
+- The `hackrepair_plugin_archiver_base_dir` filter planned earlier was not built; the archive stays in `wp-content`, in the same place as in all earlier builds, and moving it elsewhere is not supported.
 - Archived plugins are left in place if this plugin is deactivated or deleted.
 
 ## Tests and tooling
@@ -67,7 +67,7 @@ Run the shared PHPCS installation before committing PHP changes:
 1. `cd ../svn/hackrepair-plugin-archiver && svn up && svn stat` (should be clean). SVN is not installed by default: `brew install subversion`.
 2. In this repo: bump `Version:` in the plugin header and `Stable tag` in `readme.txt`, add a changelog entry, update `README.md` ("Current release") and this file, write `releases/vX.Y.Z.md`.
 3. Run PHPCS, the tests, and a manual pass on a local site (archive, restore, bulk actions, settings, multiple archives).
-4. Commit with a plain message and push (`git push origin main:master`).
+4. Commit with a plain message and push (`git push origin main`).
 5. Build with `python3 scripts/build-release.py`. Copy the files it ships (not `.wordpress-org/`) into the SVN `trunk/`, then `svn add --force trunk`, `svn rm` anything removed, `svn diff`.
 6. `svn ci -m "Release X.Y.Z: ..." --username <wp.org user>` (SVN password, separate from the login password; two-factor required).
 7. `svn cp trunk tags/X.Y.Z && svn ci -m "Tagging version X.Y.Z"`. `Stable tag` in trunk `readme.txt` must equal the tag.
