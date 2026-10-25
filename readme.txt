@@ -14,6 +14,8 @@ Disable plugins without deleting them. Archive in one click, restore any time, a
 
 == Description ==
 
+The native View Details window includes an Other THRG Plugins guide to five other tools from The Hack Repair Guy.
+
 Plugins you switch off but never delete pile up, and one day somebody clicks Activate on the one that broke the site, or the one that was hacked. Plugin Archiver moves a plugin's files out of wp-content/plugins into a separate archive folder. WordPress stops listing it, so it cannot be activated by accident, but nothing is deleted and its settings stay in the database. Restore it whenever you want, configured as you left it.
 
 [youtube https://www.youtube.com/watch?v=i_Gn22bWLVs]

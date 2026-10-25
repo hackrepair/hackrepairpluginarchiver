@@ -1,0 +1,7 @@
+/* Scoped to the companion section; WordPress owns the banner and sidebar. */
+#plugin-information .hackrepair_plugin_archiver-toolkit { display: flow-root; }
+#plugin-information .hackrepair_plugin_archiver-toolkit-intro { margin: 0 0 8px; font-size: 18px; font-weight: 600; color: #1d2327; }
+#plugin-information .hackrepair_plugin_archiver-toolkit-card { border: 1px solid #dcdcde; border-left: 3px solid #2271b1; border-radius: 4px; padding: 14px 16px; margin: 16px 0; background: #f8fafb; }
+#plugin-information .hackrepair_plugin_archiver-toolkit-card h3 { clear: none; margin: 0 0 6px; font-size: 16px; }
+#plugin-information .hackrepair_plugin_archiver-toolkit-card p { margin: 6px 0 0; }
+#plugin-information .hackrepair_plugin_archiver-toolkit-note { color: #646970; font-size: 12px; }

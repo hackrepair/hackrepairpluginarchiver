@@ -27,6 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once plugin_dir_path( __FILE__ ) . 'includes/security.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/records.php';
 require_once plugin_dir_path( __FILE__ ) . 'includes/download.php';
+require_once plugin_dir_path( __FILE__ ) . 'includes/companion-plugins.php';
 HackRepair_Plugin_Archiver_Security::init();
 HackRepair_Plugin_Archiver_Records::init();
 HackRepair_Plugin_Archiver_Download::init();
