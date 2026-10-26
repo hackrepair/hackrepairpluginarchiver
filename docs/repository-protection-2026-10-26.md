@@ -25,3 +25,8 @@ Dependency inventory workflow passed: https://github.com/hackrepair/hackrepairpl
 Initial alert counts (no secret values retrieved into logs): secret alerts 0; Dependabot alerts 0. These are an initial observation; indexing and scans can update later. Zero alerts does not negate the upstream Parsedown advisories or establish that no secrets/vulnerabilities exist.
 
 Manual dispatch is additionally restricted by a job-level main-branch condition. Future checks: `python3 scripts/verify-repository-protection.py`.
+
+
+### Final main-only workflow check
+
+The main-branch-restricted workflow also passed: https://github.com/hackrepair/hackrepairpluginarchiver/actions/runs/40386898626 (commit `cf4daa79cd06e9fe741fb5d59a9746b13a66d46f`). Read-only verification confirmed all expected declared package versions/Actions refs indexed. Archiver has no open Dependabot alerts at this observation; this is not an application-security finding.
