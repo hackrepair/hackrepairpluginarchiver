@@ -10,7 +10,7 @@ version = re.search(r'Version:\s*([0-9.]+)', main.read_text()).group(1)
 output = a.output or root / 'dist' / (slug + '.' + version + '.zip')
 output.parent.mkdir(parents=True, exist_ok=True)
 excluded = {'.git', '.github', '.review', '.wordpress-org', 'tests', 'scripts', 'dist', 'releases', 'node_modules', 'vendor', 'docs'}
-excluded_files = {'.DS_Store', '.gitignore', '.editorconfig', '.distignore', 'phpcs.xml.dist', 'README.md', 'PROJECT.md'}
+excluded_files = {'.DS_Store', '.gitignore', '.editorconfig', '.distignore', 'phpcs.xml.dist', 'README.md', 'PROJECT.md', 'SECURITY.md'}
 files = [f for f in sorted(root.rglob('*'))
          if f.is_file() and f.relative_to(root).parts[0] not in excluded and f.name not in excluded_files]
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as z:

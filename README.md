@@ -69,7 +69,7 @@ Updates come from WordPress.org. This repository is the source and history of th
 
 **[Jim Walker](https://hackrepair.com/)** — The Hack Repair Guy — author and maintainer. Developer notes: [PROJECT.md](PROJECT.md "Architecture, release process, design decisions and known limits").
 
-[Questions and help](https://wordpress.org/support/plugin/hackrepair-plugin-archiver/ "Plugin Archiver support forum on WordPress.org") · [Report a bug](https://github.com/hackrepair/hackrepairpluginarchiver/issues) · [Security reporting](mailto:jim%40hackrepair%2Ecom) · [Buy Jim a coffee](https://hackrepair.com/donations/buy-jim-a-coffee)
+[Questions and help](https://wordpress.org/support/plugin/hackrepair-plugin-archiver/ "Plugin Archiver support forum on WordPress.org") · [Report a bug](https://github.com/hackrepair/hackrepairpluginarchiver/issues) · [Security reporting](SECURITY.md) · [Buy Jim a coffee](https://hackrepair.com/donations/buy-jim-a-coffee)
 
 ## License and credits
 
