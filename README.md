@@ -16,7 +16,7 @@
 
 <p align="center">
   <a href="https://wordpress.org/plugins/hackrepair-plugin-archiver/"><strong>Get it on WordPress.org</strong></a> ·
-  <a href="https://hackrepair.github.io/hackrepairpluginarchiver/">Project page</a> ·
+  <a href="https://hackrepair.com/about/hackrepair-plugin-archiver">Project page</a> ·
   <a href="https://wordpress.org/support/plugin/hackrepair-plugin-archiver/">Support forum</a> ·
   <a href="https://wordpress.org/support/plugin/hackrepair-plugin-archiver/reviews/">Reviews</a>
 </p>
