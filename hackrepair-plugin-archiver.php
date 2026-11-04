@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Plugin Name:       The Hack Repair Guy's Plugin Archiver
  * Plugin URI:        https://wordpress.org/plugins/hackrepair-plugin-archiver/
  * Description:       Quickly deactivate and archive a plugin for later use. Archiving a plugin both deactivates and removes the plugin from your visible Plugins list.
- * Version:           3.3.2
+ * Version:           3.3.3
  * Requires at least: 6.6
  * Requires PHP:      7.4
  * Author:            Jim Walker, The Hack Repair Guy

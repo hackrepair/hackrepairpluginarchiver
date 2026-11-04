@@ -2,7 +2,7 @@
 
 Developer notes for contributors. For what the plugin does, see [README.md](README.md "What the plugin does and how to install it").
 
-Current release: **3.3.2**, published to WordPress.org on October 21, 2026 (SVN revision 3759198, tag `3.3.2`) and released on GitHub as `3.3.2`. Earlier published release: **3.1.1** (SVN tag `3.1.1`, September 11, 2025). 3.1.2, 3.2.0, 3.3.0 and 3.3.1 were built but never published on their own; their changes ship in 3.3.2.
+Current release: **3.3.3**, prepared and awaiting the WordPress.org SVN commit. Last published: **3.3.2** on October 21, 2026 (SVN revision 3759198, tag `3.3.2`), released on GitHub as `3.3.2`. Earlier published release: **3.1.1** (SVN tag `3.1.1`, September 11, 2025). 3.1.2, 3.2.0, 3.3.0 and 3.3.1 were built but never published on their own; their changes ship in 3.3.2.
 
 ## Scope
 
@@ -123,9 +123,9 @@ None bundled.
 - Old commits that carried embedded image metadata were removed from `main`'s history in October 2026; GitHub may still serve the unreferenced objects by exact SHA until its own cleanup runs. A support request is drafted if it is ever wanted.
 
 
-## Companion-plugin guide — October 25, 2026 (pending release)
+## Companion-plugin guide — October 25, 2026 (ships in 3.3.3)
 
-The native View Details **Other THRG Plugins** tab lists the other five tools: Disable Other Plugin Notices, Group Password Reset, Plugin Detective, Site Inspector, Post Update Email Notifier and Plugin Archiver, excluding the current plugin. Plugin Archiver always links to https://wordpress.org/plugins/hackrepair-plugin-archiver/; the GitHub-distributed tools link to their own repositories. Cards are informational links, with no automatic installs or external requests. Archiver retains WordPress.org updates and metadata. No published version, tag or release asset is changed by this source update.
+The native View Details **Other THRG Plugins** tab lists the seven other tools: Bunker, Disable Other Plugin Notices, Group Password Reset, Plugin Detective, Post Update Email Notifier, Site Inspector and Stickies, excluding the current plugin. Plugin Archiver always links to https://wordpress.org/plugins/hackrepair-plugin-archiver/; the GitHub-distributed tools link to their own repositories. Cards are informational links, with no automatic installs or external requests. Archiver retains WordPress.org updates and metadata. No published version, tag or release asset is changed by this source update.
 
 Verification: shared PHPCS and `php tests/companion-plugins.php` pass for this checkout. Native WordPress View Details on Zendogs renders five distinct companion cards, with no self-link and Archiver linked only to WordPress.org. Archiver uses `plugins_api_result` for official metadata and preserves ratings/version/update controls; the test used a temporary loader beside the older installed Archiver, not a full upgrade. Temporary preview files are restored after testing; no reset, archive, delete or email action was performed. Published releases remain unchanged.
 

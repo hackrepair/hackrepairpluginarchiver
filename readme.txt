@@ -5,7 +5,7 @@ Donate link: https://hackrepair.com/donations/buy-jim-a-coffee
 Requires at least: 6.6
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 3.3.2
+Stable tag: 3.3.3
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Support link: https://wordpress.org/support/plugin/hackrepair-plugin-archiver/
@@ -131,6 +131,9 @@ Report security concerns privately to Jim Walker at jim@hackrepair.com. Do not i
 3. Settings screen with archive directory controls
 
 == Changelog ==
+
+= 3.3.3 =
+- New: an Other THRG Plugins tab in this plugin's View Details window introduces seven other tools from The Hack Repair Guy, with a link to each and a note about supporting the project with a donation. The tab is informational, makes no outside requests and keeps WordPress.org's own ratings, version and banners
 
 = 3.3.2 =
 - Deleting from the archive now asks for confirmation (single and bulk), because it removes the files permanently
