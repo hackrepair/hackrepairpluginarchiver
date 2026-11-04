@@ -19,7 +19,7 @@
 
 Plugin Archiver moves a plugin's files out of `wp-content/plugins` into a separate archive folder. WordPress stops listing it, so it cannot be activated by accident, but nothing is deleted and its settings stay in the database.
 
-**Install and updates come from WordPress.org.** In your dashboard, open **Plugins → Add New** and search for "The Hack Repair Guy's Plugin Archiver", or use the link above. The plugin code is published in the [WordPress.org repository](https://plugins.trac.wordpress.org/browser/hackrepair-plugin-archiver/); this GitHub page is a pointer to it.
+**Install and updates come from WordPress.org.** In your dashboard, open **Plugins → Add New** and search for "The Hack Repair Guy's Plugin Archiver", or use the link above. This GitHub page is a pointer to the plugin on WordPress.org.
 
 Current release: **3.3.3**.
 
