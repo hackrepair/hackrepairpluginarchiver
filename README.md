@@ -1,7 +1,3 @@
-<p align="center">
-  <img src=".wordpress-org/banner-772x250.png" alt="The Hack Repair Guy's Plugin Archiver" width="772" height="250">
-</p>
-
 <h1 align="center">The Hack Repair Guy's Plugin Archiver</h1>
 
 <p align="center">
@@ -23,9 +19,9 @@
 
 Plugin Archiver moves a plugin's files out of `wp-content/plugins` into a separate archive folder. WordPress stops listing it, so it cannot be activated by accident, but nothing is deleted and its settings stay in the database.
 
-**Install and updates come from WordPress.org.** In your dashboard, open **Plugins → Add New** and search for "The Hack Repair Guy's Plugin Archiver", or use the link above. This GitHub repository is the source code and history.
+**Install and updates come from WordPress.org.** In your dashboard, open **Plugins → Add New** and search for "The Hack Repair Guy's Plugin Archiver", or use the link above. The plugin code is published in the [WordPress.org repository](https://plugins.trac.wordpress.org/browser/hackrepair-plugin-archiver/); this GitHub page is a pointer to it.
 
-Current release: **3.3.3**. See the [release notes](releases/v3.3.3.md).
+Current release: **3.3.3**.
 
 ## What it does
 
@@ -53,9 +49,9 @@ The plugin sends nothing about your site anywhere and adds nothing to the public
 
 ## Author and support
 
-**[Jim Walker](https://hackrepair.com/)**, The Hack Repair Guy, author and maintainer. Developer notes: [PROJECT.md](PROJECT.md "Architecture, release process, design decisions and known limits").
+**[Jim Walker](https://hackrepair.com/)**, The Hack Repair Guy, author and maintainer.
 
-[Support forum](https://wordpress.org/support/plugin/hackrepair-plugin-archiver/) · [Report a bug](https://github.com/hackrepair/hackrepairpluginarchiver/issues) · [Security reporting](SECURITY.md) · [Buy Jim a coffee](https://hackrepair.com/donations/buy-jim-a-coffee)
+[Support forum](https://wordpress.org/support/plugin/hackrepair-plugin-archiver/) · [Report a bug](https://github.com/hackrepair/hackrepairpluginarchiver/issues) · [Buy Jim a coffee](https://hackrepair.com/donations/buy-jim-a-coffee)
 
 ## License
 
@@ -63,4 +59,4 @@ The plugin sends nothing about your site anywhere and adds nothing to the public
 
 ## Changelog
 
-See the **Changelog** section of [`readme.txt`](readme.txt) or the [WordPress.org page](https://wordpress.org/plugins/hackrepair-plugin-archiver/#developers).
+See the [WordPress.org page](https://wordpress.org/plugins/hackrepair-plugin-archiver/#developers).
